@@ -805,99 +805,140 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
           ),
         ),
         color: isCompleted ? completedBgColor : lightColor,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Stack(
           children: [
-            // Cabecera con puntos y estado
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), // Padding reducido
-              decoration: BoxDecoration(
-                color: isCompleted ? completedHeaderColor : color,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  topRight: Radius.circular(8),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+            // Contenido principal de la tarjeta
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Cabecera con puntos y estado
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), // Padding reducido
+                  decoration: BoxDecoration(
+                    color: isCompleted ? completedHeaderColor : color,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        isCompleted ? Icons.calendar_today : _getCategoryIcon(task.category),
-                        color: Colors.white,
-                        size: 14, // Icono más pequeño
+                      Row(
+                        children: [
+                          Icon(
+                            isCompleted ? Icons.calendar_today : _getCategoryIcon(task.category),
+                            color: Colors.white,
+                            size: 14, // Icono más pequeño
+                          ),
+                          const SizedBox(width: 2), // Espacio reducido
+                          Text(
+                            '${task.points} pts',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12, // Texto más pequeño
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 2), // Espacio reducido
-                      Text(
-                        '${task.points} pts',
-                        style: const TextStyle(
+                      if (isCompleted)
+                        const Icon(
+                          Icons.check_circle,
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12, // Texto más pequeño
+                          size: 14, // Icono más pequeño
                         ),
-                      ),
                     ],
                   ),
-                  if (isCompleted)
-                    const Icon(
-                      Icons.check_circle,
-                      color: Colors.white,
-                      size: 14, // Icono más pequeño
+                ),
+                
+                // Contenido
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0), // Padding reducido
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            task.title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12, // Texto más pequeño
+                              color: isCompleted 
+                                  ? Colors.grey.shade600 
+                                  : Colors.black87,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        
+                        // Botón de completar (solo para tareas no completadas)
+                        if (!isCompleted && isInteractive)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 4, // Padding reducido
+                              horizontal: 6, // Padding reducido
+                            ),
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(4), // Radio reducido
+                            ),
+                            child: const Text(
+                              '¡Completar!',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10, // Texto más pequeño
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                      ],
                     ),
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
             
-            // Contenido
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0), // Padding reducido
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        task.title,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12, // Texto más pequeño
-                          color: isCompleted 
-                              ? Colors.grey.shade600 
-                              : Colors.black87,
+            // Overlay con sello de verificación para tareas completadas
+            if (isCompleted)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.1),
+                  ),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade700,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 2,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 5,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 32,
                       ),
                     ),
-                    
-                    // Botón de completar (solo para tareas no completadas)
-                    if (!isCompleted && isInteractive)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 4, // Padding reducido
-                          horizontal: 6, // Padding reducido
-                        ),
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(4), // Radio reducido
-                        ),
-                        child: const Text(
-                          '¡Completar!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10, // Texto más pequeño
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                  ],
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

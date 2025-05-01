@@ -21,7 +21,7 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
   @override
   Widget build(BuildContext context) {
     final userId = ref.watch(userIdProvider);
-    
+
     if (userId == null) {
       return Scaffold(
         body: Center(
@@ -29,10 +29,10 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
         ),
       );
     }
-    
+
     final currentWeekAsync = ref.watch(currentWeekProvider(userId));
     final activeRewards = ref.watch(activeRewardsProvider(userId));
-    
+
     return Scaffold(
       body: Stack(
         children: [
@@ -48,7 +48,7 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
                     child: Text('No hay una semana activa'),
                   );
                 }
-                
+
                 return _buildCatalogContent(
                   context,
                   userId,
@@ -126,33 +126,50 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
                   ),
                   const SizedBox(height: 16),
                   
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.75,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    itemCount: normalRewards.length,
-                    itemBuilder: (context, index) {
-                      final reward = normalRewards[index];
-                      final isUnlocked = unlockedRewardIds.contains(reward.id);
-                      final canUnlock = week.totalPoints >= reward.cost && !isUnlocked;
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Determinar número de columnas según el ancho disponible
+                      int crossAxisCount = 2; // Predeterminado para pantallas pequeñas
+                      double childAspectRatio = 0.9; // Más compactas (casi cuadradas)
                       
-                      return _buildRewardCard(
-                        reward: reward,
-                        weekId: week.id,
-                        userId: userId,
-                        isUnlocked: isUnlocked,
-                        canUnlock: canUnlock,
-                        currentPoints: week.totalPoints,
+                      if (constraints.maxWidth > 900) {
+                        crossAxisCount = 5; // Pantallas muy grandes (5 columnas)
+                        childAspectRatio = 0.85;
+                      } else if (constraints.maxWidth > 600) {
+                        crossAxisCount = 4; // Tablets y pantallas medianas
+                        childAspectRatio = 0.9;
+                      } else if (constraints.maxWidth > 400) {
+                        crossAxisCount = 3; // Teléfonos más grandes
+                      }
+
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          childAspectRatio: childAspectRatio,
+                          crossAxisSpacing: 6, // Espacio reducido
+                          mainAxisSpacing: 6,  // Espacio reducido
+                        ),
+                        itemCount: normalRewards.length,
+                        itemBuilder: (context, index) {
+                          final reward = normalRewards[index];
+                          final isUnlocked = unlockedRewardIds.contains(reward.id);
+                          final canUnlock = !isUnlocked && week.totalPoints >= reward.cost;
+                          
+                          return _buildRewardCard(
+                            reward: reward,
+                            weekId: week.id,
+                            userId: userId,
+                            isUnlocked: isUnlocked,
+                            canUnlock: canUnlock,
+                            currentPoints: week.totalPoints,
+                          );
+                        },
                       );
                     },
                   ),
-                  
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                 ],
                 
                 // Super premios
@@ -162,56 +179,74 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
                       const Icon(Icons.workspace_premium, color: Colors.amber),
                       const SizedBox(width: 8),
                       Text(
-                        'Super rewards',
+                        'rewards.superRewards'.tr(),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
                   
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.75,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    itemCount: superRewards.length,
-                    itemBuilder: (context, index) {
-                      final reward = superRewards[index];
-                      final isUnlocked = unlockedRewardIds.contains(reward.id);
-                      final canUnlock = week.totalPoints >= reward.cost && !isUnlocked;
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Determinar número de columnas según el ancho disponible
+                      int crossAxisCount = 2; // Predeterminado para pantallas pequeñas
+                      double childAspectRatio = 0.9; // Más compactas (casi cuadradas)
                       
-                      return _buildRewardCard(
-                        reward: reward,
-                        weekId: week.id,
-                        userId: userId,
-                        isUnlocked: isUnlocked,
-                        canUnlock: canUnlock,
-                        currentPoints: week.totalPoints,
+                      if (constraints.maxWidth > 900) {
+                        crossAxisCount = 5; // Pantallas muy grandes (5 columnas)
+                        childAspectRatio = 0.85;
+                      } else if (constraints.maxWidth > 600) {
+                        crossAxisCount = 4; // Tablets y pantallas medianas
+                        childAspectRatio = 0.9;
+                      } else if (constraints.maxWidth > 400) {
+                        crossAxisCount = 3; // Teléfonos más grandes
+                      }
+
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          childAspectRatio: childAspectRatio,
+                          crossAxisSpacing: 6, // Espacio reducido
+                          mainAxisSpacing: 6,  // Espacio reducido
+                        ),
+                        itemCount: superRewards.length,
+                        itemBuilder: (context, index) {
+                          final reward = superRewards[index];
+                          final isUnlocked = unlockedRewardIds.contains(reward.id);
+                          final canUnlock = !isUnlocked && week.totalPoints >= reward.cost;
+                          
+                          return _buildRewardCard(
+                            reward: reward,
+                            weekId: week.id,
+                            userId: userId,
+                            isUnlocked: isUnlocked,
+                            canUnlock: canUnlock,
+                            currentPoints: week.totalPoints,
+                          );
+                        },
                       );
                     },
                   ),
                 ],
                 
                 // Mensaje si no hay recompensas
-                if (canjeableRewards.isEmpty)
+                if (normalRewards.isEmpty && superRewards.isEmpty)
                   Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(24.0),
+                      padding: const EdgeInsets.all(16.0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.card_giftcard,
-                            size: 64,
-                            color: Colors.grey.shade300,
+                            size: 48,
+                            color: Colors.grey,
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No hay premios disponibles',
+                            'No hay recompensas disponibles',
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.grey.shade600,
@@ -239,12 +274,16 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.purple,
-            Colors.deepPurple,
-          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          colors: [
+            Colors.deepPurple.shade700,
+            Colors.deepPurple.shade300,
+          ],
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(16),
+          bottomRight: Radius.circular(16),
         ),
         boxShadow: [
           BoxShadow(
@@ -254,92 +293,97 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
           ),
         ],
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // Titulo
-            const Text(
-              'Mi catálogo de premios',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+      child: Column(
+        children: [
+          // Título
+          Text(
+            'Tus logros de esta semana',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          
+          // Puntos y monedas
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Puntos
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$totalPoints puntos',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            
-            // Puntos y monedas
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Puntos
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$totalPoints puntos',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+              
+              const SizedBox(width: 16),
+              
+              // Monedas
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
                   ),
                 ),
-                
-                const SizedBox(width: 16),
-                
-                // Monedas
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.monetization_on,
-                        color: Colors.amber,
-                        size: 20,
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.monetization_on,
+                      color: Colors.amber,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$coinsEarned monedas',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$coinsEarned monedas',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
-  
+
   Widget _buildRewardCard({
     required RewardModel reward,
     required String weekId,
@@ -356,258 +400,190 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
     final hasImage = reward.imageUrl != null && reward.imageUrl!.isNotEmpty;
     final pointsNeeded = reward.cost - currentPoints;
     
-    return Card(
-      elevation: isUnlocked ? 1 : 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      color: isUnlocked 
-          ? Colors.grey.shade100 
-          : Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Imagen
-          Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // Imagen de la recompensa o placehoder
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: hasImage
-                      ? Image.network(
-                          reward.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            color: color.withOpacity(0.2),
-                            child: const Center(
-                              child: Icon(Icons.broken_image, size: 48),
-                            ),
-                          ),
-                        )
-                      : Container(
-                          color: color.withOpacity(0.2),
-                          child: Center(
-                            child: Icon(
-                              reward.type == RewardType.normal
-                                  ? Icons.card_giftcard
-                                  : reward.type == RewardType.premium
-                                      ? Icons.workspace_premium
-                                      : Icons.monetization_on,
-                              size: 48,
-                              color: color,
-                            ),
-                          ),
-                        ),
-                ),
-                
-                // Overlay para recompensas desbloqueadas
-                if (isUnlocked)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.emoji_events,
-                            size: 48,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text(
-                              '¡DESBLOQUEADO!',
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                
-                // Overlay para recompensas bloqueadas
-                if (!isUnlocked && !canUnlock)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.lock,
-                            size: 48,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'Faltan $pointsNeeded puntos',
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                
-                // Coste en la esquina
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.star,
-                              color: Colors.amber,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              '${reward.cost}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    return GestureDetector(
+      onTap: canUnlock 
+          ? () => _unlockReward(reward, weekId, userId)
+          : null,
+      child: Card(
+        elevation: 2,
+        margin: const EdgeInsets.all(2), // Margen reducido como en las misiones
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8), // Radio reducido
+          side: BorderSide(
+            color: isUnlocked ? Colors.grey.shade300 : color.withOpacity(0.5),
+            width: 1,
           ),
-          
-          // Título y botón
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+        color: isUnlocked 
+            ? Colors.grey.shade100 
+            : color.withOpacity(0.15),
+        child: Stack(
+          children: [
+            // Contenido principal
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  reward.title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: isUnlocked 
-                        ? Colors.grey.shade600 
-                        : Colors.black87,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                
-                // Descripción (si tiene)
-                if (reward.description != null && reward.description!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
-                    child: Text(
-                      reward.description!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isUnlocked 
-                            ? Colors.grey.shade500 
-                            : Colors.grey.shade700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                // Cabecera con puntos y estado
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), // Padding reducido
+                  decoration: BoxDecoration(
+                    color: isUnlocked ? Colors.grey : color,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
                     ),
                   ),
-                
-                // Botón de desbloquear (solo si puede desbloquear)
-                if (canUnlock) ...[
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => _unlockReward(reward, weekId, userId),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 6,
-                        horizontal: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
                         children: [
-                          const Icon(
-                            Icons.lock_open,
+                          Icon(
+                            reward.type == RewardType.normal 
+                                ? Icons.card_giftcard 
+                                : Icons.workspace_premium,
                             color: Colors.white,
-                            size: 16,
+                            size: 14, // Icono más pequeño
                           ),
-                          const SizedBox(width: 4),
-                          const Text(
-                            '¡Desbloquear!',
-                            style: TextStyle(
+                          const SizedBox(width: 2), // Espacio reducido
+                          Text(
+                            '${reward.cost} pts',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 12, // Texto más pequeño
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
+                      if (isUnlocked)
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.white,
+                          size: 14, // Icono más pequeño
+                        ),
+                    ],
+                  ),
+                ),
+                
+                // Contenido
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0), // Padding reducido
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Título
+                        Flexible(
+                          child: Text(
+                            reward.title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12, // Texto más pequeño
+                              color: isUnlocked 
+                                  ? Colors.grey.shade600 
+                                  : Colors.black87,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        
+                        // Imagen (si tiene)
+                        if (hasImage)
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                                image: DecorationImage(
+                                  image: NetworkImage(reward.imageUrl!),
+                                  fit: BoxFit.cover,
+                                  colorFilter: isUnlocked 
+                                      ? ColorFilter.mode(
+                                          Colors.grey.withOpacity(0.7),
+                                          BlendMode.saturation,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ),
+                        
+                        // Botón de desbloquear (solo si puede desbloquear)
+                        if (!isUnlocked && canUnlock)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 4, // Padding reducido
+                              horizontal: 6, // Padding reducido
+                            ),
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(4), // Radio reducido
+                            ),
+                            child: Text(
+                              'rewards.unlock'.tr(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10, // Texto más pequeño
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ],
             ),
-          ),
-        ],
+            
+            // Overlay para recompensas bloqueadas que no se pueden desbloquear aún
+            if (!isUnlocked && !canUnlock)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.4),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.lock,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '$pointsNeeded puntos más',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
-  
+
   Future<void> _unlockReward(RewardModel reward, String weekId, String userId) async {
     try {
       await ref.read(rewardsNotifierProvider.notifier).unlockReward(
