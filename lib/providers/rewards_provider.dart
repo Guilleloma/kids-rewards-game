@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/reward_model.dart';
 import '../services/firestore_service.dart';
@@ -64,6 +66,8 @@ class RewardsNotifier extends StateNotifier<AsyncValue<void>> {
     required RewardType type,
     required int cost,
     File? image,
+    Uint8List? imageBytes,
+    String? imageUrl,
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -71,12 +75,22 @@ class RewardsNotifier extends StateNotifier<AsyncValue<void>> {
       final tempId = DateTime.now().millisecondsSinceEpoch.toString();
       
       // Subir imagen si se proporciona
-      String? imageUrl;
-      if (image != null) {
-        imageUrl = await _storageService.uploadRewardImage(
+      String? finalImageUrl = imageUrl;
+      
+      // Para web, subir bytes de imagen
+      if (kIsWeb && imageBytes != null) {
+        finalImageUrl = await _storageService.uploadRewardImageBytes(
+          userId: userId,
+          imageBytes: imageBytes,
+          fileName: 'reward_$tempId.jpg',
+        );
+      }
+      // Para móvil, subir archivo
+      else if (!kIsWeb && image != null) {
+        finalImageUrl = await _storageService.uploadRewardImage(
           userId: userId,
           imageFile: image,
-          rewardId: tempId,
+          fileName: 'reward_$tempId.jpg',
         );
       }
       
@@ -87,7 +101,7 @@ class RewardsNotifier extends StateNotifier<AsyncValue<void>> {
         description: description,
         type: type,
         cost: cost,
-        imageUrl: imageUrl,
+        imageUrl: finalImageUrl,
       );
       
       // Guardar en Firestore
@@ -110,6 +124,8 @@ class RewardsNotifier extends StateNotifier<AsyncValue<void>> {
     RewardType? type,
     int? cost,
     File? newImage,
+    Uint8List? newImageBytes,
+    String? newImageUrl,
     bool? active,
   }) async {
     state = const AsyncValue.loading();
@@ -126,7 +142,27 @@ class RewardsNotifier extends StateNotifier<AsyncValue<void>> {
       
       // Procesar imagen si se proporciona
       String? imageUrl = currentReward.imageUrl;
-      if (newImage != null) {
+      
+      // Si se proporciona una nueva URL directamente, usarla
+      if (newImageUrl != null) {
+        imageUrl = newImageUrl;
+      }
+      // Para web, usar bytes de imagen
+      else if (kIsWeb && newImageBytes != null) {
+        // Eliminar imagen anterior si existe
+        if (currentReward.imageUrl != null && currentReward.imageUrl!.isNotEmpty) {
+          await _storageService.deleteImage(currentReward.imageUrl!);
+        }
+        
+        // Subir nueva imagen
+        imageUrl = await _storageService.uploadRewardImageBytes(
+          userId: userId,
+          imageBytes: newImageBytes,
+          fileName: 'reward_$rewardId.jpg',
+        );
+      }
+      // Para móvil, usar archivo
+      else if (!kIsWeb && newImage != null) {
         // Eliminar imagen anterior si existe
         if (currentReward.imageUrl != null && currentReward.imageUrl!.isNotEmpty) {
           await _storageService.deleteImage(currentReward.imageUrl!);
@@ -136,7 +172,7 @@ class RewardsNotifier extends StateNotifier<AsyncValue<void>> {
         imageUrl = await _storageService.uploadRewardImage(
           userId: userId,
           imageFile: newImage,
-          rewardId: rewardId,
+          fileName: 'reward_$rewardId.jpg',
         );
       }
       

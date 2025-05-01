@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/task_model.dart';
 import '../../providers/tasks_provider.dart';
+import '../../providers/service_providers.dart';
 
 class TaskManagerScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -371,7 +374,7 @@ class _TaskManagerScreenState extends ConsumerState<TaskManagerScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('common.cancel'.tr()),
+            child: Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -397,7 +400,7 @@ class _TaskManagerScreenState extends ConsumerState<TaskManagerScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: Text('common.delete'.tr()),
+            child: Text('Eliminar'),
           ),
         ],
       ),
@@ -456,13 +459,16 @@ class TaskFormDialog extends ConsumerStatefulWidget {
 
 class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
   
   late TaskCategory _selectedCategory;
-  late int _selectedPoints;
   File? _selectedImage;
+  Uint8List? _selectedImageBytes; // Para compatibilidad con web
+  bool _isWeb = kIsWeb; // Detectar si estamos en web
+  
   String? _existingImageUrl;
+  late int _selectedPoints;
   bool _isLoading = false;
   
   @override
@@ -471,12 +477,14 @@ class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
     
     // Inicializar con datos de la tarea si existe
     if (widget.task != null) {
-      _titleController.text = widget.task!.title;
-      _descriptionController.text = widget.task!.description ?? '';
+      _titleController = TextEditingController(text: widget.task!.title);
+      _descriptionController = TextEditingController(text: widget.task!.description ?? '');
       _selectedCategory = widget.task!.category;
       _selectedPoints = widget.task!.points;
       _existingImageUrl = widget.task!.imageUrl;
     } else {
+      _titleController = TextEditingController();
+      _descriptionController = TextEditingController();
       _selectedCategory = widget.initialCategory;
       _selectedPoints = widget.initialCategory.points;
     }
@@ -491,65 +499,125 @@ class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
   
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
+    try {
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      
+      if (pickedFile != null) {
+        setState(() {
+          if (_isWeb) {
+            // Para web, guardar como bytes
+            pickedFile.readAsBytes().then((value) {
+              setState(() {
+                _selectedImageBytes = value;
+                _selectedImage = null; // No usamos File en web
+              });
+            });
+          } else {
+            // Para móvil, mantener compatibilidad con File
+            _selectedImage = File(pickedFile.path);
+            _selectedImageBytes = null;
+          }
+        });
+      }
+    } catch (e) {
+      // Mostrar mensaje amigable según los principios de Nielsen
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo cargar la imagen. Por favor, intenta con otra.'),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Entendido',
+            onPressed: () {},
+          ),
+        ),
+      );
     }
   }
   
   Future<void> _saveTask() async {
-    if (!_formKey.currentState!.validate()) return;
-    
-    setState(() {
-      _isLoading = true;
-    });
-    
-    try {
-      if (widget.task == null) {
-        // Crear nueva tarea
-        await ref.read(tasksNotifierProvider.notifier).addTask(
-          userId: widget.userId,
-          title: _titleController.text.trim(),
-          description: _descriptionController.text.trim(),
-          category: _selectedCategory,
-          points: _selectedPoints,
-          image: _selectedImage,
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      try {
+        final title = _titleController.text.trim();
+        final description = _descriptionController.text.trim();
+        
+        // Subir imagen si existe
+        String? imageUrl;
+        if (_selectedImage != null || _selectedImageBytes != null) {
+          // Crear un nombre único para la imagen usando timestamp
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          final imageName = 'task_$timestamp.jpg';
+          
+          if (_isWeb && _selectedImageBytes != null) {
+            // Para web, subir los bytes
+            imageUrl = await ref.read(storageServiceProvider).uploadTaskImageBytes(
+              userId: widget.userId,
+              fileName: imageName,
+              imageBytes: _selectedImageBytes!,
+            );
+          } else if (_selectedImage != null) {
+            // Para móvil, subir el archivo
+            imageUrl = await ref.read(storageServiceProvider).uploadTaskImage(
+              userId: widget.userId,
+              fileName: imageName,
+              imageFile: _selectedImage!,
+            );
+          }
+        } else if (_existingImageUrl != null) {
+          // Mantener la imagen existente
+          imageUrl = _existingImageUrl;
+        }
+        
+        if (widget.task == null) {
+          // Crear nueva tarea
+          await ref.read(tasksNotifierProvider.notifier).addTask(
+            userId: widget.userId,
+            title: title,
+            description: description,
+            category: _selectedCategory,
+            points: _selectedPoints,
+            image: _isWeb ? null : _selectedImage,
+            imageBytes: _isWeb ? _selectedImageBytes : null,
+            imageUrl: imageUrl,
+          );
+        } else {
+          // Actualizar tarea existente
+          await ref.read(tasksNotifierProvider.notifier).updateTask(
+            userId: widget.userId,
+            taskId: widget.task!.id,
+            title: title,
+            description: description,
+            category: _selectedCategory,
+            points: _selectedPoints,
+            newImage: _isWeb ? null : _selectedImage,
+            newImageBytes: _isWeb ? _selectedImageBytes : null,
+            newImageUrl: imageUrl,
+          );
+        }
+        
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.task == null
+                  ? 'tasks.taskAdded'.tr()
+                  : 'tasks.taskUpdated'.tr(),
+            ),
+          ),
         );
-      } else {
-        // Actualizar tarea existente
-        await ref.read(tasksNotifierProvider.notifier).updateTask(
-          userId: widget.userId,
-          taskId: widget.task!.id,
-          title: _titleController.text.trim(),
-          description: _descriptionController.text.trim(),
-          category: _selectedCategory,
-          points: _selectedPoints,
-          newImage: _selectedImage,
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
         );
       }
-      
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.task == null
-                ? 'tasks.taskAdded'.tr()
-                : 'tasks.taskUpdated'.tr(),
-          ),
-        ),
-      );
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
     }
   }
   
@@ -572,7 +640,7 @@ class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
-                  labelText: 'tasks.taskName'.tr(),
+                  labelText: 'Nombre de la misión',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -590,7 +658,7 @@ class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: InputDecoration(
-                  labelText: 'tasks.description'.tr(),
+                  labelText: 'Descripción (opcional)',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -600,7 +668,7 @@ class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
               const SizedBox(height: 16),
               
               // Categoría
-              Text('tasks.category'.tr(),
+              Text('Categoría',
                   style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 8),
               DropdownButtonFormField<TaskCategory>(
@@ -655,7 +723,7 @@ class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
               const SizedBox(height: 16),
               
               // Puntos
-              Text('tasks.points'.tr(),
+              Text('Puntos',
                   style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 8),
               SegmentedButton<int>(
@@ -686,7 +754,7 @@ class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
               const SizedBox(height: 16),
               
               // Imagen
-              Text('tasks.image'.tr(),
+              Text('Imagen',
                   style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 8),
               InkWell(
@@ -699,16 +767,25 @@ class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: _selectedImage != null
+                  child: _selectedImageBytes != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: Image.file(
-                            _selectedImage!,
+                          child: Image.memory(
+                            _selectedImageBytes!,
                             fit: BoxFit.cover,
                             width: double.infinity,
                           ),
                         )
-                      : _existingImageUrl != null && _existingImageUrl!.isNotEmpty
+                      : _selectedImage != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              _selectedImage!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
+                          )
+                        : _existingImageUrl != null && _existingImageUrl!.isNotEmpty
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Image.network(
@@ -745,7 +822,7 @@ class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'tasks.selectImage'.tr(),
+                                    'Seleccionar imagen',
                                     style: TextStyle(
                                       color: Colors.grey.shade400,
                                     ),
@@ -764,17 +841,20 @@ class _TaskFormDialogState extends ConsumerState<TaskFormDialog> {
           onPressed: _isLoading 
               ? null 
               : () => Navigator.of(context).pop(),
-          child: Text('common.cancel'.tr()),
+          child: Text('Cancelar'),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _saveTask,
           child: _isLoading
               ? const SizedBox(
-                  width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
                 )
-              : Text('common.save'.tr()),
+              : Text('Guardar'),
         ),
       ],
     );

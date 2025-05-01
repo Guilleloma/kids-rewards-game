@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/task_model.dart';
 import '../services/firestore_service.dart';
@@ -67,6 +69,8 @@ class TasksNotifier extends StateNotifier<AsyncValue<void>> {
     required TaskCategory category,
     int? points,
     File? image,
+    Uint8List? imageBytes,
+    String? imageUrl,
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -75,18 +79,30 @@ class TasksNotifier extends StateNotifier<AsyncValue<void>> {
       
       // Valores por defecto
       final taskPoints = points ?? category.points;
-      String imageUrl = '';
+      String finalImageUrl = imageUrl ?? '';
       
       // Subir imagen si se proporciona
-      if (image != null) {
-        final uploadedUrl = await _storageService.uploadTaskImage(
+      if (kIsWeb && imageBytes != null) {
+        // Para web, subir bytes de imagen
+        final uploadedUrl = await _storageService.uploadTaskImageBytes(
           userId: userId,
-          imageFile: image,
-          taskId: tempId,
+          imageBytes: imageBytes,
+          fileName: 'task_$tempId.jpg',
         );
         
         if (uploadedUrl != null) {
-          imageUrl = uploadedUrl;
+          finalImageUrl = uploadedUrl;
+        }
+      } else if (!kIsWeb && image != null) {
+        // Para móvil, subir archivo
+        final uploadedUrl = await _storageService.uploadTaskImage(
+          userId: userId,
+          imageFile: image,
+          fileName: 'task_$tempId.jpg',
+        );
+        
+        if (uploadedUrl != null) {
+          finalImageUrl = uploadedUrl;
         }
       }
       
@@ -97,7 +113,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<void>> {
         description: description,
         category: category,
         points: taskPoints,
-        imageUrl: imageUrl,
+        imageUrl: finalImageUrl,
         active: true,
       );
       
@@ -121,6 +137,8 @@ class TasksNotifier extends StateNotifier<AsyncValue<void>> {
     TaskCategory? category,
     int? points,
     File? newImage,
+    Uint8List? newImageBytes,
+    String? newImageUrl,
     bool? active,
   }) async {
     state = const AsyncValue.loading();
@@ -135,7 +153,31 @@ class TasksNotifier extends StateNotifier<AsyncValue<void>> {
       
       // Procesar imagen si se proporciona
       String imageUrl = currentTask.imageUrl;
-      if (newImage != null) {
+      
+      // Si se proporciona una nueva URL directamente, usarla
+      if (newImageUrl != null) {
+        imageUrl = newImageUrl;
+      }
+      // Para web, usar bytes de imagen
+      else if (kIsWeb && newImageBytes != null) {
+        // Eliminar imagen anterior si existe
+        if (currentTask.imageUrl.isNotEmpty) {
+          await _storageService.deleteImage(currentTask.imageUrl);
+        }
+        
+        // Subir nueva imagen
+        final uploadedUrl = await _storageService.uploadTaskImageBytes(
+          userId: userId,
+          imageBytes: newImageBytes,
+          fileName: 'task_$taskId.jpg',
+        );
+        
+        if (uploadedUrl != null) {
+          imageUrl = uploadedUrl;
+        }
+      }
+      // Para móvil, usar archivo
+      else if (!kIsWeb && newImage != null) {
         // Eliminar imagen anterior si existe
         if (currentTask.imageUrl.isNotEmpty) {
           await _storageService.deleteImage(currentTask.imageUrl);
@@ -145,7 +187,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<void>> {
         final uploadedUrl = await _storageService.uploadTaskImage(
           userId: userId,
           imageFile: newImage,
-          taskId: taskId,
+          fileName: 'task_$taskId.jpg',
         );
         
         if (uploadedUrl != null) {

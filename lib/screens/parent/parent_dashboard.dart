@@ -123,10 +123,35 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> with SingleTi
         ],
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
+          indicatorSize: TabBarIndicatorSize.tab,
+          labelStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontSize: 14,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           tabs: [
-            Tab(text: 'dashboard.weekProgress'.tr()),
-            Tab(text: 'tasks.myDailyChallenges'.tr()),
-            Tab(text: 'rewards.myRewards'.tr()),
+            Tab(
+              text: 'dashboard.weekProgress'.tr(),
+              icon: const Icon(Icons.calendar_today),
+              height: 56,
+            ),
+            Tab(
+              text: 'tasks.myDailyChallenges'.tr(),
+              icon: const Icon(Icons.task_alt),
+              height: 56,
+            ),
+            Tab(
+              text: 'rewards.myRewards'.tr(),
+              icon: const Icon(Icons.card_giftcard),
+              height: 56,
+            ),
           ],
         ),
       ),
@@ -248,19 +273,115 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> with SingleTi
           currentWeekAsync.when(
             data: (week) {
               if (week == null) {
-                return const Center(
-                  child: Text('No hay semana activa'),
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('dashboard.noWeekYet'.tr()),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () async {
+                          await ref.read(weeksNotifierProvider.notifier).createNewWeek(userId);
+                        },
+                        child: Text('dashboard.createNewWeek'.tr()),
+                      ),
+                    ],
+                  ),
                 );
               }
               
               return _buildWeekStats(userId, week);
             },
-            loading: () => const Center(
-              child: CircularProgressIndicator(),
+            loading: () => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text('dashboard.loading'.tr()),
+                ],
+              ),
             ),
-            error: (error, _) => Center(
-              child: Text('Error: $error'),
-            ),
+            error: (error, stackTrace) {
+              // Verificar si es un error de índice de Firestore
+              if (error.toString().contains('[cloud_firestore/failed-precondition]')) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.info_outline, color: Colors.orange, size: 48),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Se necesita crear un índice en Firestore',
+                          style: Theme.of(context).textTheme.headline6,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Firebase necesita crear un índice para esta consulta. Por favor, haz clic en el enlace que aparece en la consola de desarrollador o sigue estas instrucciones:',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text('1. Ve a la consola de Firebase'),
+                              Text('2. Selecciona tu proyecto'),
+                              Text('3. Ve a Firestore Database > Índices'),
+                              Text('4. Añade un índice compuesto para:'),
+                              Padding(
+                                padding: EdgeInsets.only(left: 16.0),
+                                child: Text('- Colección: users/{userId}/weeks'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(left: 16.0),
+                                child: Text('- Campo 1: startDate (Ascendente)'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(left: 16.0),
+                                child: Text('- Campo 2: endDate (Ascendente)'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => _ensureCurrentWeekExists(),
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              
+              // Para otros errores
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    Text('errors.database'.tr()),
+                    const SizedBox(height: 8),
+                    Text(error.toString(), maxLines: 3, overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => _ensureCurrentWeekExists(),
+                      child: Text('common.retry'.tr()),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -280,7 +401,7 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> with SingleTi
               child: _buildStatCard(
                 icon: Icons.star,
                 color: Colors.amber,
-                title: 'dashboard.totalPoints'.tr(),
+                title: 'Puntos totales',
                 value: week.totalPoints.toString(),
               ),
             ),
@@ -290,7 +411,7 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> with SingleTi
               child: _buildStatCard(
                 icon: Icons.monetization_on,
                 color: Colors.green,
-                title: 'dashboard.earnedCoins'.tr(),
+                title: 'Monedas ganadas',
                 value: week.coinsEarned.toString(),
               ),
             ),
@@ -304,7 +425,7 @@ class _ParentDashboardState extends ConsumerState<ParentDashboard> with SingleTi
               child: _buildStatCard(
                 icon: Icons.task_alt,
                 color: Colors.blue,
-                title: 'dashboard.completedTasks'.tr(),
+                title: 'Misiones completadas',
                 value: '${week.completedTasks.length}',
               ),
             ),

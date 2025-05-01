@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
@@ -32,6 +34,36 @@ class StorageService {
       return downloadUrl;
     } catch (e) {
       print('Error al subir imagen: $e');
+      return null;
+    }
+  }
+  
+  // Método para subir bytes de imagen para plataforma web
+  Future<String?> uploadImageBytes({
+    required String userId,
+    required Uint8List imageBytes,
+    required String path,
+    String? fileName,
+  }) async {
+    try {
+      // Crear nombre de archivo único si no se proporciona uno
+      final name = fileName ?? '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final storagePath = 'users/$userId/$path/$name';
+      
+      // Crear referencia al archivo en Storage
+      final ref = _storage.ref().child(storagePath);
+      
+      // Subir la imagen como bytes
+      final uploadTask = await ref.putData(
+        imageBytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      
+      // Obtener URL de descarga
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Error al subir imagen como bytes: $e');
       return null;
     }
   }
@@ -80,13 +112,29 @@ class StorageService {
   Future<String?> uploadTaskImage({
     required String userId,
     required File imageFile,
-    required String taskId,
+    String? fileName,
   }) async {
+    final taskFileName = fileName ?? 'task_${DateTime.now().millisecondsSinceEpoch}.jpg';
     return uploadImage(
       userId: userId,
       imageFile: imageFile,
       path: 'tasks',
-      fileName: 'task_$taskId.jpg',
+      fileName: taskFileName,
+    );
+  }
+  
+  // Subir bytes de imagen para una tarea (para web)
+  Future<String?> uploadTaskImageBytes({
+    required String userId,
+    required Uint8List imageBytes,
+    String? fileName,
+  }) async {
+    final taskFileName = fileName ?? 'task_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    return uploadImageBytes(
+      userId: userId,
+      imageBytes: imageBytes,
+      path: 'tasks',
+      fileName: taskFileName,
     );
   }
   
@@ -94,13 +142,29 @@ class StorageService {
   Future<String?> uploadRewardImage({
     required String userId,
     required File imageFile,
-    required String rewardId,
+    String? fileName,
   }) async {
+    final rewardFileName = fileName ?? 'reward_${DateTime.now().millisecondsSinceEpoch}.jpg';
     return uploadImage(
       userId: userId,
       imageFile: imageFile,
       path: 'rewards',
-      fileName: 'reward_$rewardId.jpg',
+      fileName: rewardFileName,
+    );
+  }
+  
+  // Subir bytes de imagen para una recompensa (para web)
+  Future<String?> uploadRewardImageBytes({
+    required String userId,
+    required Uint8List imageBytes,
+    String? fileName,
+  }) async {
+    final rewardFileName = fileName ?? 'reward_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    return uploadImageBytes(
+      userId: userId,
+      imageBytes: imageBytes,
+      path: 'rewards',
+      fileName: rewardFileName,
     );
   }
   
