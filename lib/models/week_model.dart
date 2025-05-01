@@ -93,6 +93,9 @@ class WeekModel {
     // Calcular monedas (1 moneda cada 30 puntos)
     final newCoinsEarned = (newTotalPoints / 30).floor();
     
+    final Map<String, DateTime> newCompletionDates = Map<String, DateTime>.from(taskCompletionDates);
+    newCompletionDates[taskId] = DateTime.now();
+    
     return WeekModel(
       id: id,
       startDate: startDate,
@@ -101,7 +104,7 @@ class WeekModel {
       coinsEarned: newCoinsEarned,
       completedTasks: newCompletedTasks,
       rewardsEarned: rewardsEarned,
-      taskCompletionDates: taskCompletionDates,
+      taskCompletionDates: newCompletionDates,
     );
   }
   
@@ -157,7 +160,39 @@ class WeekModel {
       startDate: startDate,
       endDate: endDate,
       totalPoints: newTotalPoints,
-      coinsEarned: coinsEarned,
+      coinsEarned: (newTotalPoints / 30).floor(),
+      completedTasks: newCompletedTasks,
+      rewardsEarned: rewardsEarned,
+      taskCompletionDates: newCompletionDates,
+    );
+  }
+  
+  // Método para crear una copia sin una tarea completada (deshacer)
+  WeekModel copyWithoutCompletedTask({
+    required String taskId, 
+    required int taskPoints,
+  }) {
+    final newCompletedTasks = List<String>.from(completedTasks);
+    if (newCompletedTasks.contains(taskId)) {
+      newCompletedTasks.remove(taskId);
+    } else {
+      return this; // Si la tarea no estaba completada, devolver la semana sin cambios
+    }
+    
+    // Restar los puntos y recalcular monedas
+    final newTotalPoints = totalPoints - taskPoints;
+    final newCoinsEarned = (newTotalPoints / 30).floor();
+    
+    // Eliminar la fecha de compleción
+    final Map<String, DateTime> newCompletionDates = Map<String, DateTime>.from(taskCompletionDates);
+    newCompletionDates.remove(taskId);
+    
+    return WeekModel(
+      id: id,
+      startDate: startDate,
+      endDate: endDate,
+      totalPoints: newTotalPoints < 0 ? 0 : newTotalPoints, // Evitar puntos negativos
+      coinsEarned: newCoinsEarned < 0 ? 0 : newCoinsEarned, // Evitar monedas negativas
       completedTasks: newCompletedTasks,
       rewardsEarned: rewardsEarned,
       taskCompletionDates: newCompletionDates,

@@ -262,6 +262,29 @@ class TasksNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
   
+  // Desmarcar tarea como completada (deshacer)
+  Future<bool> uncompleteTask({
+    required String userId,
+    required String weekId,
+    required TaskModel task,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      await _firestoreService.uncompleteTask(
+        userId,
+        weekId,
+        task.id,
+        task.points,
+      );
+      
+      state = const AsyncValue.data(null);
+      return true;
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+      return false;
+    }
+  }
+  
   // Obtener tarea por ID
   Future<TaskModel?> getTaskById(String userId, String taskId) async {
     state = const AsyncValue.loading();

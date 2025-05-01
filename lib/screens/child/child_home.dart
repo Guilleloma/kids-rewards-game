@@ -609,18 +609,6 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                     ],
                   ),
                 ),
-                
-                // Leyenda de premios 
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildRewardLegend(false, "Premio"),
-                      _buildRewardLegend(true, "Super Premio"),
-                    ],
-                  ),
-                ),
               ],
             ),
           ],
@@ -629,30 +617,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     );
   }
   
-  // Elemento de leyenda para los tipos de premios
-  Widget _buildRewardLegend(bool isSuper, String label) {
-    return Row(
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: isSuper ? Colors.orange : Colors.green,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-          ),
-        ),
-      ],
-    );
-  }
-  
+  // Método para construir los encabezados de categoría
   Widget _buildCategoryHeader(
     BuildContext context,
     String title,
@@ -680,7 +645,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
       ),
     );
   }
-  
+
   Widget _buildTasksGrid(
     BuildContext context,
     List<TaskModel> tasks,
@@ -744,156 +709,162 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     final completedHeaderColor = Colors.grey;
     final completedBgColor = Colors.grey.shade100;
     
-    return GestureDetector(
-      onTap: isInteractive && !isCompleted 
-          ? () => _completeTask(task, weekId, userId)
-          : null,
-      child: Card(
-        elevation: 2,
-        margin: const EdgeInsets.all(2), // Margen reducido
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8), // Radio reducido
-          side: BorderSide(
-            color: isCompleted ? Colors.grey.shade300 : color.withOpacity(0.5),
-            width: 1,
+    return Tooltip(
+      message: isCompleted && isInteractive ? "Mantén pulsado para desmarcar" : "",
+      child: GestureDetector(
+        onTap: isInteractive && !isCompleted 
+            ? () => _completeTask(task, weekId, userId)
+            : null,
+        onLongPress: isInteractive && isCompleted 
+            ? () => _uncompleteTask(task, weekId, userId)
+            : null,
+        child: Card(
+          elevation: 2,
+          margin: const EdgeInsets.all(2), // Margen reducido
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8), // Radio reducido
+            side: BorderSide(
+              color: isCompleted ? Colors.grey.shade300 : color.withOpacity(0.5),
+              width: 1,
+            ),
           ),
-        ),
-        color: isCompleted ? completedBgColor : lightColor,
-        child: Stack(
-          children: [
-            // Contenido principal de la tarjeta
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Cabecera con puntos y estado
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), // Padding reducido
-                  decoration: BoxDecoration(
-                    color: isCompleted ? completedHeaderColor : color,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            isCompleted ? Icons.calendar_today : _getCategoryIcon(task.category),
-                            color: Colors.white,
-                            size: 14, // Icono más pequeño
-                          ),
-                          const SizedBox(width: 2), // Espacio reducido
-                          Text(
-                            '${task.points} pts',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12, // Texto más pequeño
-                            ),
-                          ),
-                        ],
+          color: isCompleted ? completedBgColor : lightColor,
+          child: Stack(
+            children: [
+              // Contenido principal de la tarjeta
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Cabecera con puntos y estado
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), // Padding reducido
+                    decoration: BoxDecoration(
+                      color: isCompleted ? completedHeaderColor : color,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8),
                       ),
-                      if (isCompleted)
-                        const Icon(
-                          Icons.check_circle,
-                          color: Colors.white,
-                          size: 14, // Icono más pequeño
-                        ),
-                    ],
-                  ),
-                ),
-                
-                // Contenido
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0), // Padding reducido
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    ),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Flexible(
-                          child: Text(
-                            task.title,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12, // Texto más pequeño
-                              color: isCompleted 
-                                  ? Colors.grey.shade600 
-                                  : Colors.black87,
+                        Row(
+                          children: [
+                            Icon(
+                              isCompleted ? Icons.calendar_today : _getCategoryIcon(task.category),
+                              color: Colors.white,
+                              size: 14, // Icono más pequeño
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        
-                        // Botón de completar (solo para tareas no completadas)
-                        if (!isCompleted && isInteractive)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 4, // Padding reducido
-                              horizontal: 6, // Padding reducido
-                            ),
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(4), // Radio reducido
-                            ),
-                            child: const Text(
-                              '¡Completar!',
-                              style: TextStyle(
+                            const SizedBox(width: 2), // Espacio reducido
+                            Text(
+                              '${task.points} pts',
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 10, // Texto más pequeño
+                                fontSize: 12, // Texto más pequeño
                               ),
-                              textAlign: TextAlign.center,
                             ),
+                          ],
+                        ),
+                        if (isCompleted)
+                          const Icon(
+                            Icons.check_circle,
+                            color: Colors.white,
+                            size: 14, // Icono más pequeño
                           ),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            
-            // Overlay con sello de verificación para tareas completadas
-            if (isCompleted)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.1),
-                  ),
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade700,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
+                  
+                  // Contenido
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0), // Padding reducido
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              task.title,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12, // Texto más pequeño
+                                color: isCompleted 
+                                    ? Colors.grey.shade600 
+                                    : Colors.black87,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
+                          
+                          // Botón de completar (solo para tareas no completadas)
+                          if (!isCompleted && isInteractive)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 4, // Padding reducido
+                                horizontal: 6, // Padding reducido
+                              ),
+                              decoration: BoxDecoration(
+                                color: color,
+                                borderRadius: BorderRadius.circular(4), // Radio reducido
+                              ),
+                              child: const Text(
+                                '¡Completar!',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10, // Texto más pequeño
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 32,
+                    ),
+                  ),
+                ],
+              ),
+              
+              // Overlay con sello de verificación para tareas completadas
+              if (isCompleted)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.1),
+                    ),
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade700,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 5,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 32,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -924,6 +895,63 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
             ),
           ),
           backgroundColor: _getCategoryColor(task.category),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+  
+  // Método para desmarcar una tarea como completada (deshacer)
+  Future<void> _uncompleteTask(TaskModel task, String weekId, String userId) async {
+    try {
+      // Mostrar un diálogo de confirmación antes de desmarcar
+      final shouldUndo = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Desmarcar tarea'),
+          content: Text('¿Estás seguro de que quieres desmarcar la tarea "${task.title}" como completada?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Desmarcar'),
+            ),
+          ],
+        ),
+      ) ?? false;
+      
+      if (!shouldUndo) return;
+      
+      await ref.read(tasksNotifierProvider.notifier).uncompleteTask(
+        userId: userId,
+        weekId: weekId,
+        task: task,
+      );
+      
+      if (!mounted) return;
+      
+      // Mostrar mensaje de confirmación
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Tarea desmarcada: ${task.title}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

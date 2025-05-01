@@ -145,6 +145,35 @@ class FirestoreService {
     });
   }
 
+  // Método para desmarcar una tarea como completada (deshacer)
+  Future<void> uncompleteTask(String userId, String weekId, String taskId, int points) async {
+    final weekRef = _weeksRef(userId).doc(weekId);
+    
+    return _firestore.runTransaction((transaction) async {
+      final weekDoc = await transaction.get(weekRef);
+      
+      if (!weekDoc.exists) {
+        throw Exception('La semana no existe');
+      }
+      
+      final week = WeekModel.fromJson(weekDoc.data() as Map<String, dynamic>, weekDoc.id);
+      
+      // Si la tarea no está completada, no hacer nada
+      if (!week.completedTasks.contains(taskId)) {
+        return;
+      }
+      
+      // Eliminar la tarea de la lista de completadas y restar los puntos
+      final updatedWeek = week.copyWithoutCompletedTask(
+        taskId: taskId,
+        taskPoints: points,
+      );
+      
+      // Actualizar la semana
+      transaction.update(weekRef, updatedWeek.toJson());
+    });
+  }
+
   // Métodos para recompensas
   Stream<List<RewardModel>> getRewards(String userId) {
     return _rewardsRef(userId)
