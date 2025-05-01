@@ -134,7 +134,9 @@ class WeekModel {
     return taskCompletionDates.entries
         .where((entry) {
           final entryDay = DateTime(entry.value.year, entry.value.month, entry.value.day);
-          return entryDay.isAtSameMomentAs(specificDay);
+          return entryDay.year == specificDay.year && 
+                 entryDay.month == specificDay.month && 
+                 entryDay.day == specificDay.day;
         })
         .map((entry) => entry.key)
         .toList();
