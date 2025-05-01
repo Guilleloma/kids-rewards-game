@@ -22,6 +22,9 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
   // Control de confeti
   bool _showConfetti = false;
   
+  // Día seleccionado para la vista semanal
+  DateTime _selectedDay = DateTime.now();
+  
   @override
   Widget build(BuildContext context) {
     final userId = ref.watch(userIdProvider);
@@ -82,12 +85,25 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                       );
                     }
                     
-                    return _buildChildContent(
-                      context,
-                      userId,
-                      childName,
-                      week,
-                      activeTasks,
+                    return Column(
+                      children: [
+                        // Banner con progreso y puntos
+                        _buildProgressBanner(childName, week, ref.watch(activeRewardsProvider(userId))),
+                        
+                        // Selector de días de la semana
+                        _buildDaySelector(week),
+                        
+                        // Contenido principal
+                        Expanded(
+                          child: _buildChildContent(
+                            context,
+                            userId,
+                            childName,
+                            week,
+                            activeTasks,
+                          ),
+                        ),
+                      ],
                     );
                   },
                   loading: () => const Center(
@@ -120,6 +136,102 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     );
   }
   
+  // Selector de días
+  Widget _buildDaySelector(WeekModel week) {
+    // Calcular los 7 días de la semana actual
+    final today = DateTime.now();
+    final weekStart = DateTime(week.startDate.year, week.startDate.month, week.startDate.day);
+    
+    // Generar una lista de los 7 días de la semana
+    final weekDays = List.generate(7, (index) => 
+      weekStart.add(Duration(days: index)));
+    
+    // Formatear los nombres de los días
+    final dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: List.generate(7, (index) {
+            final day = weekDays[index];
+            final isToday = day.day == today.day && 
+                           day.month == today.month && 
+                           day.year == today.year;
+            final dayName = dayNames[day.weekday - 1]; // -1 porque weekday va de 1-7
+            
+            // Contar tareas completadas este día
+            final tasksCompletedOnDay = week.getTasksCompletedOnDay(day).length;
+            
+            // Verificar si este día es el seleccionado
+            final isSelected = _selectedDay.day == day.day && 
+                             _selectedDay.month == day.month && 
+                             _selectedDay.year == day.year;
+            
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: ChoiceChip(
+                label: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      dayName,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : null,
+                        fontWeight: isToday ? FontWeight.bold : null,
+                      ),
+                    ),
+                    Text(
+                      day.day.toString(),
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : null,
+                        fontWeight: isToday ? FontWeight.bold : null,
+                      ),
+                    ),
+                    if (tasksCompletedOnDay > 0)
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: isSelected 
+                              ? Colors.white 
+                              : Theme.of(context).primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$tasksCompletedOnDay',
+                          style: TextStyle(
+                            color: isSelected 
+                                ? Theme.of(context).primaryColor 
+                                : Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                selected: isSelected,
+                selectedColor: Theme.of(context).primaryColor,
+                backgroundColor: isToday 
+                    ? Theme.of(context).primaryColor.withOpacity(0.1) 
+                    : null,
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() {
+                      _selectedDay = day;
+                    });
+                  }
+                },
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+  
   Widget _buildChildContent(
     BuildContext context,
     String userId,
@@ -127,8 +239,22 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     WeekModel week,
     List<TaskModel> activeTasks,
   ) {
-    // Obtener lista de tareas completadas
-    final completedTaskIds = week.completedTasks;
+    // Obtener lista de tareas completadas (ahora filtradas por día)
+    List<String> completedTaskIds = [];
+    
+    // Si estamos viendo el día actual, usamos la UI interactiva normal
+    final today = DateTime.now();
+    final isViewingToday = _selectedDay.day == today.day && 
+                         _selectedDay.month == today.month && 
+                         _selectedDay.year == today.year;
+    
+    if (isViewingToday) {
+      // Para hoy, usar todas las tareas completadas
+      completedTaskIds = week.completedTasks;
+    } else {
+      // Para otros días, mostrar solo las tareas completadas ese día específico
+      completedTaskIds = week.getTasksCompletedOnDay(_selectedDay);
+    }
     
     // Separar tareas por categoría
     final dailyTasks = activeTasks
@@ -146,9 +272,6 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     
     return Column(
       children: [
-        // Banner con progreso y puntos
-        _buildProgressBanner(childName, week, rewards),
-        
         // Lista de tareas
         Expanded(
           child: SingleChildScrollView(
@@ -157,7 +280,9 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Mis misiones para hoy:',
+                  isViewingToday 
+                      ? 'Mis misiones para hoy:' 
+                      : 'Misiones para ${DateFormat('EEEE d', 'es').format(_selectedDay)}:',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
@@ -177,6 +302,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                     week.id, 
                     userId, 
                     completedTaskIds,
+                    isViewingToday,
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -196,6 +322,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                     week.id, 
                     userId, 
                     completedTaskIds,
+                    isViewingToday,
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -215,6 +342,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                     week.id, 
                     userId, 
                     completedTaskIds,
+                    isViewingToday,
                   ),
                 ],
                 
@@ -605,6 +733,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     String weekId,
     String userId,
     List<String> completedTaskIds,
+    bool isInteractive, // Nuevo parámetro para saber si se permite interacción
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -639,6 +768,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
               weekId: weekId,
               userId: userId,
               isCompleted: completedTaskIds.contains(task.id),
+              isInteractive: isInteractive,
             );
           },
         );
@@ -651,6 +781,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     required String weekId,
     required String userId,
     required bool isCompleted,
+    required bool isInteractive, // Nuevo parámetro para saber si se permite interacción
   }) {
     final color = _getCategoryColor(task.category);
     final lightColor = color.withOpacity(0.15); // Color de fondo claro basado en la categoría
@@ -660,9 +791,9 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     final completedBgColor = Colors.grey.shade100;
     
     return GestureDetector(
-      onTap: isCompleted 
-          ? null 
-          : () => _completeTask(task, weekId, userId),
+      onTap: isInteractive && !isCompleted 
+          ? () => _completeTask(task, weekId, userId)
+          : null,
       child: Card(
         elevation: 2,
         margin: const EdgeInsets.all(2), // Margen reducido
@@ -742,7 +873,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                     ),
                     
                     // Botón de completar (solo para tareas no completadas)
-                    if (!isCompleted)
+                    if (!isCompleted && isInteractive)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(

@@ -131,8 +131,15 @@ class FirestoreService {
         return;
       }
       
-      // Actualizar puntos y tareas completadas
-      final updatedWeek = week.addCompletedTask(taskId, points);
+      // Registrar la fecha actual como fecha de compleción
+      final completionDate = DateTime.now();
+      
+      // Usar el nuevo método para añadir tarea completada con fecha
+      final updatedWeek = week.copyWithCompletedTask(
+        taskId: taskId,
+        completionDate: completionDate,
+        taskPoints: points,
+      );
       
       transaction.update(weekRef, updatedWeek.toJson());
     });

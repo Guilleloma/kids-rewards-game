@@ -6,6 +6,7 @@ class WeekModel {
   final int coinsEarned;
   final List<String> completedTasks;
   final List<String> rewardsEarned;
+  final Map<String, DateTime> taskCompletionDates;
 
   WeekModel({
     required this.id,
@@ -15,10 +16,18 @@ class WeekModel {
     this.coinsEarned = 0,
     required this.completedTasks,
     required this.rewardsEarned,
+    this.taskCompletionDates = const {},
   });
 
   // Convertir de Firestore a WeekModel
   factory WeekModel.fromJson(Map<String, dynamic> json, String id) {
+    Map<String, DateTime> completionDates = {};
+    if (json['taskCompletionDates'] != null) {
+      (json['taskCompletionDates'] as Map<String, dynamic>).forEach((taskId, dateString) {
+        completionDates[taskId] = DateTime.parse(dateString);
+      });
+    }
+    
     return WeekModel(
       id: id,
       startDate: (json['startDate'] as dynamic)?.toDate() ?? DateTime.now(),
@@ -27,11 +36,17 @@ class WeekModel {
       coinsEarned: json['coinsEarned'] ?? 0,
       completedTasks: List<String>.from(json['completedTasks'] ?? []),
       rewardsEarned: List<String>.from(json['rewardsEarned'] ?? []),
+      taskCompletionDates: completionDates,
     );
   }
 
   // Convertir a formato Firestore
   Map<String, dynamic> toJson() {
+    Map<String, String> dateStrings = {};
+    taskCompletionDates.forEach((taskId, date) {
+      dateStrings[taskId] = date.toIso8601String();
+    });
+    
     return {
       'startDate': startDate,
       'endDate': endDate,
@@ -39,6 +54,7 @@ class WeekModel {
       'coinsEarned': coinsEarned,
       'completedTasks': completedTasks,
       'rewardsEarned': rewardsEarned,
+      'taskCompletionDates': dateStrings,
     };
   }
 
@@ -56,6 +72,7 @@ class WeekModel {
       coinsEarned: 0,
       completedTasks: [],
       rewardsEarned: [],
+      taskCompletionDates: {},
     );
   }
   
@@ -84,6 +101,7 @@ class WeekModel {
       coinsEarned: newCoinsEarned,
       completedTasks: newCompletedTasks,
       rewardsEarned: rewardsEarned,
+      taskCompletionDates: taskCompletionDates,
     );
   }
   
@@ -103,6 +121,46 @@ class WeekModel {
       coinsEarned: coinsEarned,
       completedTasks: completedTasks,
       rewardsEarned: newRewardsEarned,
+      taskCompletionDates: taskCompletionDates,
+    );
+  }
+
+  // Método para obtener las tareas completadas en un día específico
+  List<String> getTasksCompletedOnDay(DateTime day) {
+    final specificDay = DateTime(day.year, day.month, day.day);
+    return taskCompletionDates.entries
+        .where((entry) {
+          final entryDay = DateTime(entry.value.year, entry.value.month, entry.value.day);
+          return entryDay.isAtSameMomentAs(specificDay);
+        })
+        .map((entry) => entry.key)
+        .toList();
+  }
+  
+  // Método para crear una copia con una nueva tarea completada
+  WeekModel copyWithCompletedTask({
+    required String taskId, 
+    required DateTime completionDate,
+    required int taskPoints,
+  }) {
+    final newTotalPoints = totalPoints + taskPoints;
+    final newCompletedTasks = List<String>.from(completedTasks);
+    if (!newCompletedTasks.contains(taskId)) {
+      newCompletedTasks.add(taskId);
+    }
+    
+    final newCompletionDates = Map<String, DateTime>.from(taskCompletionDates);
+    newCompletionDates[taskId] = completionDate;
+    
+    return WeekModel(
+      id: id,
+      startDate: startDate,
+      endDate: endDate,
+      totalPoints: newTotalPoints,
+      coinsEarned: coinsEarned,
+      completedTasks: newCompletedTasks,
+      rewardsEarned: rewardsEarned,
+      taskCompletionDates: newCompletionDates,
     );
   }
 }
