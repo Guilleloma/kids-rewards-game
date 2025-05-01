@@ -163,6 +163,37 @@ Refactor obligatorio cuando:
 - **I**: Interfaces específicas para cada caso
 - **D**: Inyección de dependencias
 
+## 🔒 Seguridad
+
+### Archivos de configuración sensibles
+
+Este proyecto utiliza Firebase, que requiere archivos de configuración con claves API:
+
+- `lib/firebase_options.dart` para la configuración general
+- `android/app/google-services.json` para la configuración de Android
+- `ios/Runner/GoogleService-Info.plist` para la configuración de iOS
+
+**⚠️ Estos archivos no se incluyen en el repositorio por razones de seguridad.**
+
+### Configuración de archivos sensibles
+
+Antes de ejecutar el proyecto:
+
+1. Copia los archivos de ejemplo y renómbralos:
+   ```bash
+   cp lib/firebase_options.example.dart lib/firebase_options.dart
+   cp android/app/google-services.example.json android/app/google-services.json
+   ```
+
+2. Crea un proyecto en la [consola de Firebase](https://console.firebase.google.com/)
+
+3. Reemplaza los valores de marcador por tus propias claves de API:
+   - En `lib/firebase_options.dart`: Actualiza las opciones de configuración de Firebase
+   - En `android/app/google-services.json`: Descarga este archivo de tu proyecto Firebase
+   - Para iOS, descarga el archivo `GoogleService-Info.plist` desde Firebase
+
+**Nunca compartas ni subas tus claves API a repositorios públicos.**
+
 ## 📄 Licencia
 
 Este proyecto está bajo la licencia MIT.
