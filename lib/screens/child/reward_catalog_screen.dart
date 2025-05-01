@@ -114,7 +114,7 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
                       const Icon(Icons.card_giftcard, color: Colors.purple),
                       const SizedBox(width: 8),
                       Text(
-                        'Premios',
+                        'rewards.myRewards'.tr(),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ],
