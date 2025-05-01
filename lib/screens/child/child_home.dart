@@ -10,6 +10,7 @@ import '../../providers/rewards_provider.dart';
 import '../../providers/weeks_provider.dart';
 import 'reward_catalog_screen.dart';
 import 'confetti_animation.dart';
+import 'package:collection/collection.dart';
 
 class ChildHome extends ConsumerStatefulWidget {
   const ChildHome({Key? key}) : super(key: key);
@@ -534,56 +535,8 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                   height: 80, // Aumentamos la altura para acomodar elementos por encima y debajo
                   child: Stack(
                     children: [
-                      // Premios como iconos por ENCIMA de la barra
-                      ...sortedRewards.map((reward) {
-                        // Posición proporcional en la barra (entre 0 y 1)
-                        final position = reward.cost / maxCost;
-                        // Determinar si el premio ya está desbloqueado
-                        final isUnlocked = totalPoints >= reward.cost;
-                        final color = isUnlocked 
-                            ? (reward.type == RewardType.premium ? Colors.orange : Colors.green) 
-                            : Colors.white.withOpacity(0.7);
-                        
-                        return Positioned(
-                          left: MediaQuery.of(context).size.width * position * 0.83 - 15, // Ajuste para centrar
-                          top: 0, // Posición en la parte superior
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Icono del premio con tooltip
-                              Tooltip(
-                                message: '${reward.title} (${reward.cost} puntos)',
-                                textStyle: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.black87,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    reward.type == RewardType.premium
-                                        ? Icons.emoji_events // Trofeo para Super Premio
-                                        : Icons.card_giftcard, // Regalo para Premio normal
-                                    color: isUnlocked ? Colors.white : Colors.black87,
-                                    size: 16,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
+                      // Agrupar premios por costo para manejar múltiples premios en la misma posición
+                      ..._buildGroupedRewardIcons(sortedRewards, totalPoints, maxCost, context),
                       
                       // Barra de progreso en el MEDIO
                       Positioned(
@@ -603,9 +556,9 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                         ),
                       ),
                       
-                      // Marcadores verticales en la barra para cada premio
-                      ...sortedRewards.map((reward) {
-                        final position = reward.cost / maxCost;
+                      // Marcadores verticales en la barra para cada punto de costo único
+                      ..._getUniqueRewardCosts(sortedRewards).map((cost) {
+                        final position = cost / maxCost;
                         return Positioned(
                           left: MediaQuery.of(context).size.width * position * 0.83 - 1, // Ajuste para centrar
                           top: 35, // Alineado con la barra
@@ -620,21 +573,20 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                         );
                       }).toList(),
                       
-                      // Números de puntos DEBAJO de la barra
-                      ...sortedRewards.map((reward) {
-                        final position = reward.cost / maxCost;
-                        final isUnlocked = totalPoints >= reward.cost;
-                        final color = isUnlocked 
-                            ? (reward.type == RewardType.premium ? Colors.orange : Colors.green) 
-                            : Colors.white.withOpacity(0.7);
-                            
+                      // Números de puntos DEBAJO de la barra (solo para costos únicos)
+                      ..._getUniqueRewardCosts(sortedRewards).map((cost) {
+                        final position = cost / maxCost;
+                        final isUnlocked = totalPoints >= cost;
+                        
                         return Positioned(
                           left: MediaQuery.of(context).size.width * position * 0.83 - 15,
                           top: 55, // Debajo de la barra
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: color,
+                              color: isUnlocked 
+                                  ? Colors.amber // Color para múltiples premios
+                                  : Colors.white.withOpacity(0.7),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: Colors.white,
@@ -642,9 +594,11 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                               ),
                             ),
                             child: Text(
-                              '${reward.cost}',
+                              '$cost',
                               style: TextStyle(
-                                color: isUnlocked ? Colors.white : Colors.black87,
+                                color: isUnlocked 
+                                    ? Colors.white 
+                                    : Colors.black87,
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1031,5 +985,85 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     if (points >= 20) return '40 puntos más para premio';
     if (points >= 10) return '50 puntos más para premio';
     return 'Consigue puntos para premios';
+  }
+  
+  List<Widget> _buildGroupedRewardIcons(List<RewardModel> rewards, int totalPoints, int maxCost, BuildContext context) {
+    // Agrupar recompensas por costo
+    final Map<int, List<RewardModel>> groupedRewards = {};
+    for (var reward in rewards) {
+      if (!groupedRewards.containsKey(reward.cost)) {
+        groupedRewards[reward.cost] = [];
+      }
+      groupedRewards[reward.cost]!.add(reward);
+    }
+    
+    return groupedRewards.entries.map((entry) {
+      final cost = entry.key;
+      final rewardsAtCost = entry.value;
+      
+      final position = cost / maxCost;
+      final isUnlocked = totalPoints >= cost;
+      
+      return Positioned(
+        left: MediaQuery.of(context).size.width * position * 0.83 - 15, // Ajuste para centrar
+        top: 0, // Posición en la parte superior
+        child: Tooltip(
+          message: rewardsAtCost.map((reward) => '${reward.title} ($cost puntos)').join('\n'),
+          textStyle: const TextStyle(
+            fontSize: 12,
+            color: Colors.white,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.black87,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+            decoration: BoxDecoration(
+              color: isUnlocked 
+                  ? Colors.blue.shade700 // Color para múltiples premios
+                  : Colors.white.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white,
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: rewardsAtCost.map((reward) {
+                // Determinar color del icono basado en el tipo de recompensa
+                Color iconColor = isUnlocked ? Colors.white : Colors.black87;
+                // Si hay múltiples iconos, usa diferentes colores para distinguirlos
+                if (rewardsAtCost.length > 1) {
+                  iconColor = reward.type == RewardType.premium 
+                      ? Colors.orange
+                      : reward.type == RewardType.coin
+                          ? Colors.amber
+                          : Colors.green;
+                }
+                
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Icon(
+                    reward.type == RewardType.premium
+                        ? Icons.emoji_events // Trofeo para Super Premio
+                        : reward.type == RewardType.coin
+                            ? Icons.monetization_on // Moneda para premio tipo moneda
+                            : Icons.card_giftcard, // Regalo para Premio normal
+                    color: iconColor,
+                    size: 12, // Tamaño reducido para acomodar múltiples iconos
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+  
+  List<int> _getUniqueRewardCosts(List<RewardModel> rewards) {
+    return rewards.map((reward) => reward.cost).toSet().toList();
   }
 }
