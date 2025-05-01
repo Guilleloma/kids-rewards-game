@@ -84,11 +84,16 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
     WeekModel week,
     List<RewardModel> activeRewards,
   ) {
+    // Filtrar las monedas, ya que estas se obtienen automáticamente y no se canjean
+    final canjeableRewards = activeRewards
+        .where((reward) => reward.type != RewardType.coin)
+        .toList();
+    
     // Separar recompensas por tipo
-    final normalRewards = activeRewards
+    final normalRewards = canjeableRewards
         .where((reward) => reward.type == RewardType.normal)
         .toList();
-    final superRewards = activeRewards
+    final superRewards = canjeableRewards
         .where((reward) => reward.type == RewardType.premium)
         .toList();
     
@@ -111,7 +116,7 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
                 if (normalRewards.isNotEmpty) ...[
                   Row(
                     children: [
-                      const Icon(Icons.card_giftcard, color: Colors.purple),
+                      const Icon(Icons.card_giftcard, color: Colors.blue),
                       const SizedBox(width: 8),
                       Text(
                         'rewards.myRewards'.tr(),
@@ -147,7 +152,7 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
                     },
                   ),
                   
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
                 ],
                 
                 // Super premios
@@ -157,7 +162,7 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
                       const Icon(Icons.workspace_premium, color: Colors.amber),
                       const SizedBox(width: 8),
                       Text(
-                        'Super Premios',
+                        'Super rewards',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ],
@@ -192,7 +197,7 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
                 ],
                 
                 // Mensaje si no hay recompensas
-                if (activeRewards.isEmpty)
+                if (canjeableRewards.isEmpty)
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
@@ -344,10 +349,11 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
     required int currentPoints,
   }) {
     final color = reward.type == RewardType.normal 
-        ? Colors.purple
-        : Colors.amber;
+        ? Colors.blue
+        : reward.type == RewardType.premium
+            ? Colors.amber
+            : Colors.green;
     final hasImage = reward.imageUrl != null && reward.imageUrl!.isNotEmpty;
-    final coinCost = (reward.cost / 30).floor();
     final pointsNeeded = reward.cost - currentPoints;
     
     return Card(
@@ -386,7 +392,9 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
                             child: Icon(
                               reward.type == RewardType.normal
                                   ? Icons.card_giftcard
-                                  : Icons.workspace_premium,
+                                  : reward.type == RewardType.premium
+                                      ? Icons.workspace_premium
+                                      : Icons.monetization_on,
                               size: 48,
                               color: color,
                             ),
@@ -510,24 +518,6 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.monetization_on,
-                              color: Colors.green,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              '$coinCost',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
@@ -643,8 +633,10 @@ class _RewardCatalogScreenState extends ConsumerState<RewardCatalogScreen> {
             ),
           ),
           backgroundColor: reward.type == RewardType.normal
-              ? Colors.purple
-              : Colors.amber,
+              ? Colors.blue
+              : reward.type == RewardType.premium
+                  ? Colors.amber
+                  : Colors.green,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

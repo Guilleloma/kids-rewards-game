@@ -49,6 +49,13 @@ class _RewardManagerScreenState extends ConsumerState<RewardManagerScreen> {
                     Icons.workspace_premium,
                     Colors.amber,
                   ),
+                  const SizedBox(width: 8),
+                  _buildFilterChip(
+                    RewardType.coin,
+                    'Monedas',
+                    Icons.monetization_on,
+                    Colors.green,
+                  ),
                 ],
               ),
             ),
@@ -144,7 +151,6 @@ class _RewardManagerScreenState extends ConsumerState<RewardManagerScreen> {
   
   Widget _buildRewardCard(RewardModel reward) {
     final color = _getRewardColor(reward.type);
-    final coinCount = (reward.cost / 30).floor();
     
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -205,20 +211,6 @@ class _RewardManagerScreenState extends ConsumerState<RewardManagerScreen> {
                                 '${reward.cost}',
                                 style: TextStyle(
                                   color: color,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(Icons.monetization_on, color: Colors.green, size: 16),
-                              const SizedBox(width: 4),
-                              Text(
-                                '$coinCount',
-                                style: const TextStyle(
-                                  color: Colors.green,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -427,9 +419,13 @@ class _RewardManagerScreenState extends ConsumerState<RewardManagerScreen> {
   Color _getRewardColor(RewardType type) {
     switch (type) {
       case RewardType.normal:
-        return Colors.purple;
+        return Colors.blue;
       case RewardType.premium:
         return Colors.amber;
+      case RewardType.coin:
+        return Colors.green;
+      default:
+        return Colors.blue; // Valor por defecto
     }
   }
   
@@ -439,6 +435,10 @@ class _RewardManagerScreenState extends ConsumerState<RewardManagerScreen> {
         return Icons.card_giftcard;
       case RewardType.premium:
         return Icons.workspace_premium;
+      case RewardType.coin:
+        return Icons.monetization_on;
+      default:
+        return Icons.card_giftcard; // Valor por defecto
     }
   }
   
@@ -448,6 +448,10 @@ class _RewardManagerScreenState extends ConsumerState<RewardManagerScreen> {
         return 'rewards.myRewards'.tr();
       case RewardType.premium:
         return 'rewards.superRewards'.tr();
+      case RewardType.coin:
+        return 'Monedas';
+      default:
+        return 'rewards.myRewards'.tr(); // Valor por defecto
     }
   }
 }
@@ -492,7 +496,7 @@ class _RewardFormDialogState extends ConsumerState<RewardFormDialog> {
       _existingImageUrl = widget.reward!.imageUrl;
     } else {
       _selectedType = widget.initialType;
-      _selectedCost = widget.initialType == RewardType.normal ? 60 : 70;
+      _selectedCost = widget.initialType == RewardType.normal ? 60 : widget.initialType == RewardType.premium ? 70 : 30;
     }
   }
   
@@ -569,14 +573,44 @@ class _RewardFormDialogState extends ConsumerState<RewardFormDialog> {
   
   @override
   Widget build(BuildContext context) {
-    final color = _selectedType == RewardType.normal ? Colors.purple : Colors.amber;
-    final coinCount = (_selectedCost / 30).floor();
+    final color = _selectedType == RewardType.normal ? Colors.purple : _selectedType == RewardType.premium ? Colors.amber : Colors.green;
     
     return AlertDialog(
-      title: Text(
-        widget.reward == null
-            ? 'rewards.addReward'.tr()
-            : 'rewards.editReward'.tr(),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            widget.reward == null
+                ? 'rewards.addReward'.tr()
+                : 'rewards.editReward'.tr(),
+          ),
+          // Indicador visual de puntos (reemplaza al $ de moneda)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.star_rounded,
+                  size: 18,
+                  color: color,
+                ),
+                const SizedBox(width: 2),
+                Text(
+                  '$_selectedCost',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       content: Form(
         key: _formKey,
@@ -632,6 +666,11 @@ class _RewardFormDialogState extends ConsumerState<RewardFormDialog> {
                     label: Text('rewards.superRewards'.tr()),
                     icon: const Icon(Icons.workspace_premium),
                   ),
+                  ButtonSegment(
+                    value: RewardType.coin,
+                    label: Text('Monedas'),
+                    icon: const Icon(Icons.monetization_on),
+                  ),
                 ],
                 selected: {_selectedType},
                 onSelectionChanged: (newSelection) {
@@ -639,10 +678,12 @@ class _RewardFormDialogState extends ConsumerState<RewardFormDialog> {
                     _selectedType = newSelection.first;
                     
                     // Ajustar coste sugerido según tipo
-                    if (_selectedType == RewardType.normal && _selectedCost > 60) {
+                    if (_selectedType == RewardType.normal && _selectedCost < 60) {
                       _selectedCost = 60;
                     } else if (_selectedType == RewardType.premium && _selectedCost < 70) {
                       _selectedCost = 70;
+                    } else if (_selectedType == RewardType.coin && _selectedCost < 30) {
+                      _selectedCost = 30;
                     }
                   });
                 },
@@ -650,16 +691,21 @@ class _RewardFormDialogState extends ConsumerState<RewardFormDialog> {
               const SizedBox(height: 16),
               
               // Coste
+              Text(
+                'rewards.cost'.tr(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Text('rewards.cost'.tr(),
-                        style: Theme.of(context).textTheme.titleSmall),
-                  ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 12,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
                       color: color.withOpacity(0.1),
@@ -668,16 +714,16 @@ class _RewardFormDialogState extends ConsumerState<RewardFormDialog> {
                     child: Row(
                       children: [
                         Icon(
-                          Icons.monetization_on,
-                          size: 16,
-                          color: Colors.green,
+                          Icons.star_rounded,
+                          size: 18,
+                          color: color,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '$coinCount',
-                          style: const TextStyle(
+                          '$_selectedCost',
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: color,
                           ),
                         ),
                       ],
@@ -685,7 +731,6 @@ class _RewardFormDialogState extends ConsumerState<RewardFormDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
               Slider(
                 value: _selectedCost.toDouble(),
                 min: 30,
@@ -700,7 +745,7 @@ class _RewardFormDialogState extends ConsumerState<RewardFormDialog> {
                 },
               ),
               Text(
-                '${_selectedCost} puntos',
+                '$_selectedCost puntos',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: color,
@@ -791,11 +836,18 @@ class _RewardFormDialogState extends ConsumerState<RewardFormDialog> {
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _saveReward,
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Theme.of(context).primaryColor,
+          ),
           child: _isLoading
               ? const SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : Text('common.save'.tr()),
         ),

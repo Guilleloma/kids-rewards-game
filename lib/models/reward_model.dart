@@ -1,6 +1,7 @@
 enum RewardType {
   normal,     // Premio normal
   premium,    // Super premio (antes "super")
+  coin,       // Moneda/Paga (se obtiene automáticamente)
 }
 
 extension RewardTypeExtension on RewardType {
@@ -10,6 +11,8 @@ extension RewardTypeExtension on RewardType {
         return 'normal';
       case RewardType.premium:
         return 'superpremio';
+      case RewardType.coin:
+        return 'moneda';
       default:
         return 'normal';
     }
@@ -19,6 +22,8 @@ extension RewardTypeExtension on RewardType {
     switch (type.toLowerCase()) {
       case 'superpremio':
         return RewardType.premium;
+      case 'moneda':
+        return RewardType.coin;
       case 'normal':
       default:
         return RewardType.normal;

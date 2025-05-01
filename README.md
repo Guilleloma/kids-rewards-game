@@ -2,9 +2,49 @@
 
 Una aplicación móvil educativa diseñada para ayudar a los niños a adquirir hábitos, reforzar su autonomía, superar pequeños retos emocionales y construir autoestima mediante un sistema de misiones, puntos y recompensas semanales.
 
+## 📖 Cómo funciona el juego
+
+### Concepto general
+El juego se basa en un ciclo semanal de tareas y recompensas:
+
+1. **Creación de misiones**: Los padres crean una lista de tareas o "misiones" organizadas en categorías:
+   - **Retos diarios**: Tareas cotidianas como hacer la cama, lavarse los dientes, etc.
+   - **Ayuda especial**: Actividades de ayuda en casa como poner la mesa, recoger juguetes, etc.
+   - **Misiones de valiente**: Retos para superar miedos o dificultades personales.
+
+2. **Ciclo semanal**: 
+   - Todos los días, se evalúan las **mismas tareas** de la lista predefinida.
+   - Las tareas completadas otorgan puntos según su dificultad o importancia.
+   - Los puntos se van acumulando durante toda la semana.
+   - Al final de la semana, se reinicia el contador de puntos para comenzar un nuevo ciclo.
+
+3. **Sistema de recompensas escalonado**:
+   - **Monedas**: Se obtienen automáticamente al alcanzar ciertos umbrales de puntos (ej: 30 puntos = 1 moneda). Representan recompensas tangibles en el mundo real (como 1€).
+   - **Premios normales**: Se desbloquean a ciertos niveles de puntos y son recompensas de nivel medio.
+   - **Super premios**: Son recompensas especiales o de mayor valor que requieren más puntos.
+
+Por ejemplo:
+- 30 puntos = 1 moneda (1€ real)
+- 60 puntos = 1 moneda adicional + un premio normal
+- 70 puntos = 1 super premio
+
+### Interfaz para padres
+Los padres tienen acceso a:
+- Panel de control con estadísticas semanales
+- Gestión de misiones (crear, editar, eliminar)
+- Configuración de recompensas y sus requisitos de puntos
+- Historial de progreso
+
+### Interfaz para niños
+Los niños ven:
+- Lista de misiones organizadas por categoría
+- Barra de progreso con indicadores visuales de las recompensas disponibles
+- Contador de monedas ganadas
+- Catálogo de premios con los puntos necesarios para cada uno
+
 ## 🌟 Características
 
-- **Sistema de misiones personalizables** (Retos Diarios, Ayudas Especiales, Misiones de Valiente)
+- **Sistema de misiones personalizables** adaptadas a cada niño
 - **Recompensas y monedas** que motivan a los niños a cumplir sus objetivos
 - **Ciclos semanales** para seguimiento del progreso
 - **Interfaz dual**: una para padres (configuración) y otra para niños (visual y simplificada)
@@ -20,7 +60,7 @@ Una aplicación móvil educativa diseñada para ayudar a los niños a adquirir h
 - **Configuración**: Personalización de perfiles y ajustes
 
 ### Para niños
-- **Página de misiones**: Visual y adaptada para niños
+- **Página de misiones**: Visual y adaptada para niños, organizada por categorías
 - **Catálogo de premios**: Muestra lo que pueden desbloquear
 
 ## 🛠️ Tecnologías utilizadas
@@ -42,7 +82,7 @@ Una aplicación móvil educativa diseñada para ayudar a los niños a adquirir h
 
 1. Clona este repositorio:
 ```bash
-git clone https://github.com/tu-usuario/kids_rewards_game.git
+git clone https://github.com/Guilleloma/kids_rewards_game.git
 cd kids_rewards_game
 ```
 
@@ -111,7 +151,7 @@ Este proyecto sigue las 10 heurísticas de usabilidad de Nielsen:
    - Mensajes de error claros y específicos
    - Confirmación de acciones exitosas
 
-2. **Coincidencia entre el sistema y el mundo real**: La interfaz debe hablar el lenguaje del usuario y seguir convenciones del mundo real.
+2. **Coincidencia entre el sistema y el mundo real**: El sistema debe hablar el idioma del usuario.
    - Uso de metáforas familiares para niños (monedas, premios)
    - Terminología apropiada para cada grupo de usuario (niños vs. adultos)
 
@@ -119,28 +159,28 @@ Este proyecto sigue las 10 heurísticas de usabilidad de Nielsen:
    - Botones de cancelar en todas las acciones importantes
    - Opción para deshacer acciones recientes
 
-4. **Consistencia y estándares**: Seguir convenciones establecidas para no confundir al usuario.
-   - Sistema de colores coherente
-   - Patrones de interacción consistentes en toda la aplicación
+4. **Consistencia y estándares**: Los usuarios no deberían tener que preguntarse si diferentes palabras, situaciones o acciones significan lo mismo.
+   - Diseño visual coherente en toda la aplicación
+   - Patrones de interacción consistentes
 
-5. **Prevención de errores**: Mejor que buenos mensajes de error es un diseño que prevenga problemas.
+5. **Prevención de errores**: Mejor que buenos mensajes de error es un diseño cuidadoso que prevenga que se produzcan problemas.
    - Validación de formularios en tiempo real
-   - Confirmación antes de acciones destructivas
+   - Confirmación para acciones destructivas
 
-6. **Reconocimiento antes que recuerdo**: Minimizar la carga de memoria del usuario.
-   - Elementos visibles y reconocibles
-   - Navegación clara e intuitiva
+6. **Reconocimiento antes que recuerdo**: Minimizar la carga de memoria del usuario haciendo que los objetos, acciones y opciones sean visibles.
+   - Elementos claramente visibles y reconocibles
+   - Navegación intuitiva
 
-7. **Flexibilidad y eficiencia de uso**: Aceleradores para usuarios avanzados.
-   - Atajos para tareas frecuentes
+7. **Flexibilidad y eficiencia de uso**: Permitir que los usuarios expertos realicen sus tareas más rápidamente.
+   - Accesos directos o atajos para acciones frecuentes
    - Personalización de la experiencia
 
-8. **Estética y diseño minimalista**: Diálogos sin información irrelevante.
-   - Interfaz limpia y sin distracciones
-   - Enfoque en lo esencial
+8. **Estética y diseño minimalista**: Los diálogos no deben contener información irrelevante o que rara vez se necesite.
+   - Interfaz limpia y clara
+   - Eliminación de elementos innecesarios
 
-9. **Ayudar a reconocer, diagnosticar y recuperarse de errores**: Mensajes de error claros.
-   - Indicación exacta del problema
+9. **Ayudar a reconocer, diagnosticar y recuperarse de errores**: Los mensajes de error deben expresarse en lenguaje claro.
+   - Mensajes específicos que indiquen el problema
    - Sugerencia de solución cuando sea posible
 
 10. **Ayuda y documentación**: Aunque es mejor que el sistema se use sin documentación, puede ser necesario proporcionar ayuda.
@@ -152,35 +192,16 @@ Todos los errores en la aplicación deben:
 
 1. **Ser específicos**: Explicar qué ha ocurrido exactamente.
 2. **Ofrecer orientación**: Indicar cómo solucionar el problema.
-3. **Usar lenguaje amigable**: Evitar términos técnicos confusos.
-4. **Ser visualmente claros**: Destacar sin ser alarmistas.
-5. **Permitir recuperación**: Ofrecer acciones para resolver el error.
+3. **Usar lenguaje amigable**: Evitar términos técnicos cuando se comunica con el usuario.
+4. **Ser visualmente claros**: Destacados pero no alarmistas.
+5. **Ofrecer recuperación**: Proporcionar acciones para resolver la situación.
 
-Ejemplos de implementación:
-- Errores de autenticación con instrucciones claras
-- Problemas de conectividad con opciones para reintentar
-- Validación de formularios con retroalimentación inmediata
+## 🧠 Principios de arquitectura
 
-## 🤝 Filosofía del diseño
+### 🏗️ Arquitectura modular
 
-- **Sin etiquetas negativas**: No hay tareas "fáciles" o "difíciles"
-- **Lenguaje positivo y motivador**
-- **Sin castigos**: Solo refuerzos positivos
-- **Personalización**: Adaptado a cada niño
-- **Diseño centrado en emociones**: Para construir autoestima
+El proyecto sigue una arquitectura modular basada en funcionalidades:
 
-## 📝 Notas para desarrolladores
-
-### Modelo de datos
-
-- **users**: Información del adulto y niño
-- **tasks**: Misiones configuradas por categorías
-- **rewards**: Premios configurados por tipos
-- **weeks**: Ciclos semanales con progreso
-
-## 📐 Reglas de Programación y Desarrollo
-
-### 🧱 Estructura Modular del Código (Flutter)
 ```
 lib/
 ├── models/     # Modelos de datos
@@ -195,25 +216,23 @@ lib/
 ### 🌳 Estrategia Git
 - **Trunk-based development**
 - Ramas: `trunk`, `development`, `feature/*`
-- Merges sin `--ff`
-- Convenciones de commits:
-  - `[Feature]`: Nueva funcionalidad
-  - `[Fix]`: Corrección de errores
-  - `[Docs]`: Documentación
-  - `[Refactor]`: Refactorización
-  - `[Test]`: Pruebas
+- Commits descriptivos siguiendo convenciones:
+  - `feat:` Nuevas características
+  - `fix:` Corrección de bugs
+  - `refactor:` Refactorización de código
+  - `docs:` Documentación
+  - `test:` Pruebas
+  - `chore:` Cambios en configuración, build, etc.
+  
+### 🧩 Principios de codificación
 
-### ♻️ Refactorización Progresiva
-Refactor obligatorio cuando:
-- Archivo > 300 líneas
-- Clase > 200 líneas
-- Función > 40 líneas o > 3 niveles de anidación
-- Responsabilidad múltiple
-- Duplicación de lógica o difícil testabilidad
-
-### 🧪 Testing
-- Unit tests con `flutter_test`
-- Posible integración con GitHub Actions
+El código de este proyecto sigue estos principios:
+- Funciones pequeñas con responsabilidad única
+- Inmutabilidad cuando sea posible
+- Separación clara de UI, lógica y datos
+- Nombres claros y descriptivos
+- DRY (Don't Repeat Yourself)
+- Comentarios explicativos cuando sea necesario
 - Código limpio, testeable y escalable
 
 ### 📐 Principios SOLID aplicados

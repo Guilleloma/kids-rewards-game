@@ -306,7 +306,9 @@ class _Step3RewardsState extends ConsumerState<Step3Rewards> {
                                   backgroundColor: _getRewardColor(reward.type),
                                   child: reward.type == RewardType.normal
                                       ? const Icon(Icons.card_giftcard, color: Colors.white)
-                                      : const Icon(Icons.workspace_premium, color: Colors.white),
+                                      : reward.type == RewardType.premium
+                                          ? const Icon(Icons.workspace_premium, color: Colors.white)
+                                          : const Icon(Icons.monetization_on, color: Colors.white),
                                 ),
                                 title: Text(reward.title),
                                 subtitle: Text(
@@ -324,7 +326,9 @@ class _Step3RewardsState extends ConsumerState<Step3Rewards> {
                                   child: Text(
                                     reward.type == RewardType.normal
                                         ? 'rewards.myRewards'.tr()
-                                        : 'rewards.superRewards'.tr(),
+                                        : reward.type == RewardType.premium
+                                            ? 'rewards.superRewards'.tr()
+                                            : 'rewards.coinRewards'.tr(),
                                     style: TextStyle(
                                       color: _getRewardColor(reward.type),
                                       fontWeight: FontWeight.bold,
@@ -355,9 +359,13 @@ class _Step3RewardsState extends ConsumerState<Step3Rewards> {
   Color _getRewardColor(RewardType type) {
     switch (type) {
       case RewardType.normal:
-        return Colors.purple;
+        return Colors.blue;
       case RewardType.premium:
         return Colors.amber;
+      case RewardType.coin:
+        return Colors.green;
+      default:
+        return Colors.blue; // Valor por defecto
     }
   }
 }
