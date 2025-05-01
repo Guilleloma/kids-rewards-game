@@ -14,7 +14,15 @@
     "passwordReset": "Restablecer contraseña",
     "resetLink": "Enviaremos un enlace para restablecer tu contraseña",
     "sendResetLink": "Enviar enlace",
-    "backToLogin": "Volver a iniciar sesión"
+    "backToLogin": "Volver a iniciar sesión",
+    "signUpNow": "Regístrate ahora",
+    "signInNow": "Inicia sesión ahora",
+    "loginError": "Error de inicio de sesión. Verifica tus credenciales.",
+    "invalidEmail": "Por favor, introduce un correo electrónico válido",
+    "weakPassword": "La contraseña debe tener al menos 6 caracteres",
+    "nameRequired": "Por favor, introduce tu nombre",
+    "childName": "Nombre de tu hijo/a",
+    "childNameRequired": "Por favor, introduce el nombre de tu hijo/a"
   },
   "onboarding": {
     "welcomeTitle": "¡Bienvenido a Kids Rewards!",
@@ -29,6 +37,8 @@
     "next": "Siguiente",
     "back": "Atrás",
     "start": "Comenzar",
+    "skip": "Omitir",
+    "done": "Finalizar",
     "allSet": "¡Todo configurado! Ahora pueden usar la aplicación para motivar y recompensar."
   },
   "dashboard": {
@@ -36,11 +46,18 @@
     "childMode": "Modo niño",
     "settings": "Configuración",
     "resetWeek": "Reiniciar semana",
+    "weeklyStats": "Estadísticas semanales",
+    "welcome": "Bienvenido/a",
+    "yourPoints": "Tus puntos",
+    "earnedRewards": "Premios obtenidos",
     "stats": {
       "completedTasks": "Misiones completadas",
       "coinsEarned": "Monedas obtenidas",
       "pendingRewards": "Premios por desbloquear"
-    }
+    },
+    "noWeekYet": "Todavía no hay una semana activa",
+    "createNewWeek": "Crear nueva semana",
+    "loading": "Cargando..."
   },
   "tasks": {
     "myDailyChallenges": "Mis retos diarios",
@@ -55,7 +72,10 @@
     "taskCategory": "Categoría",
     "taskPoints": "Puntos",
     "taskImage": "Imagen (opcional)",
-    "deleteConfirmation": "¿Estás seguro de que quieres eliminar esta misión?"
+    "deleteConfirmation": "¿Estás seguro de que quieres eliminar esta misión?",
+    "taskAdded": "Misión añadida correctamente",
+    "taskUpdated": "Misión actualizada correctamente",
+    "taskDeleted": "Misión eliminada correctamente"
   },
   "rewards": {
     "myRewards": "Premios normales",
@@ -88,6 +108,16 @@
     "edit": "Editar",
     "confirm": "Confirmar",
     "active": "Activo",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "error": "Error",
+    "loading": "Cargando...",
+    "retry": "Reintentar"
+  },
+  "errors": {
+    "general": "Ha ocurrido un error",
+    "network": "Error de conexión",
+    "auth": "Error de autenticación",
+    "database": "Error en la base de datos",
+    "loadData": "Error al cargar los datos"
   }
 }

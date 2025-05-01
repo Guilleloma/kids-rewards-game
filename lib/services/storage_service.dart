@@ -3,10 +3,42 @@ import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:kids_rewards_game/utils/dev_logger.dart';
+import 'package:kids_rewards_game/utils/cors_proxy.dart';
 
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final ImagePicker _picker = ImagePicker();
+  
+  // Método de utilidad para prevenir problemas CORS con Firebase Storage
+  String fixFirebaseStorageUrl(String url) {
+    // Verificar si es una URL de Firebase Storage
+    if (url.contains('firebasestorage.googleapis.com')) {
+      if (kIsWeb) {
+        try {
+          // En web, usar la función JavaScript para evitar problemas CORS
+          return CorsProxy.processUrlWithJs(url);
+        } catch (e) {
+          // Si falla, usar el enfoque de timestamp directo
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          if (url.contains('?')) {
+            return '$url&nocache=$timestamp';
+          } else {
+            return '$url?nocache=$timestamp';
+          }
+        }
+      } else {
+        // En móvil, es suficiente con un timestamp
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        if (url.contains('?')) {
+          return '$url&nocache=$timestamp';
+        } else {
+          return '$url?nocache=$timestamp';
+        }
+      }
+    }
+    return url;
+  }
   
   // Subir una imagen al Storage
   Future<String?> uploadImage({
@@ -46,24 +78,35 @@ class StorageService {
     String? fileName,
   }) async {
     try {
+      devLogger.debug('Iniciando uploadImageBytes para usuario: $userId, path: $path');
+      devLogger.debug('Tamaño de la imagen en bytes: ${imageBytes.length}');
+      
       // Crear nombre de archivo único si no se proporciona uno
       final name = fileName ?? '${DateTime.now().millisecondsSinceEpoch}.jpg';
       final storagePath = 'users/$userId/$path/$name';
+      devLogger.debug('Ruta de almacenamiento: $storagePath');
       
       // Crear referencia al archivo en Storage
       final ref = _storage.ref().child(storagePath);
       
       // Subir la imagen como bytes
+      devLogger.debug('Iniciando subida de bytes al Storage');
       final uploadTask = await ref.putData(
         imageBytes,
         SettableMetadata(contentType: 'image/jpeg'),
       );
+      devLogger.debug('Subida completada, obteniendo URL');
       
       // Obtener URL de descarga
       final downloadUrl = await uploadTask.ref.getDownloadURL();
+      devLogger.debug('URL de descarga obtenida: $downloadUrl');
       return downloadUrl;
     } catch (e) {
-      print('Error al subir imagen como bytes: $e');
+      devLogger.error('Error al subir imagen como bytes: $e');
+      if (e is FirebaseException) {
+        devLogger.error('Código: ${e.code}, Mensaje: ${e.message}');
+        devLogger.error('Stack trace: ${e.stackTrace}');
+      }
       return null;
     }
   }

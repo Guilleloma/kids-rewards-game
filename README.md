@@ -101,6 +101,66 @@ La aplicación está disponible en:
 - Español
 - Inglés
 
+## 🎨 Principios UX/UI
+
+### Principios Heurísticos de Nielsen
+Este proyecto sigue las 10 heurísticas de usabilidad de Nielsen:
+
+1. **Visibilidad del estado del sistema**: El usuario siempre debe saber qué está sucediendo a través de retroalimentación adecuada.
+   - Uso de indicadores de carga
+   - Mensajes de error claros y específicos
+   - Confirmación de acciones exitosas
+
+2. **Coincidencia entre el sistema y el mundo real**: La interfaz debe hablar el lenguaje del usuario y seguir convenciones del mundo real.
+   - Uso de metáforas familiares para niños (monedas, premios)
+   - Terminología apropiada para cada grupo de usuario (niños vs. adultos)
+
+3. **Control y libertad del usuario**: Permitir "salidas de emergencia" para acciones no deseadas.
+   - Botones de cancelar en todas las acciones importantes
+   - Opción para deshacer acciones recientes
+
+4. **Consistencia y estándares**: Seguir convenciones establecidas para no confundir al usuario.
+   - Sistema de colores coherente
+   - Patrones de interacción consistentes en toda la aplicación
+
+5. **Prevención de errores**: Mejor que buenos mensajes de error es un diseño que prevenga problemas.
+   - Validación de formularios en tiempo real
+   - Confirmación antes de acciones destructivas
+
+6. **Reconocimiento antes que recuerdo**: Minimizar la carga de memoria del usuario.
+   - Elementos visibles y reconocibles
+   - Navegación clara e intuitiva
+
+7. **Flexibilidad y eficiencia de uso**: Aceleradores para usuarios avanzados.
+   - Atajos para tareas frecuentes
+   - Personalización de la experiencia
+
+8. **Estética y diseño minimalista**: Diálogos sin información irrelevante.
+   - Interfaz limpia y sin distracciones
+   - Enfoque en lo esencial
+
+9. **Ayudar a reconocer, diagnosticar y recuperarse de errores**: Mensajes de error claros.
+   - Indicación exacta del problema
+   - Sugerencia de solución cuando sea posible
+
+10. **Ayuda y documentación**: Aunque es mejor que el sistema se use sin documentación, puede ser necesario proporcionar ayuda.
+    - Tutoriales incorporados
+    - Consejos contextuales
+
+### Gestión de Errores para el Usuario
+Todos los errores en la aplicación deben:
+
+1. **Ser específicos**: Explicar qué ha ocurrido exactamente.
+2. **Ofrecer orientación**: Indicar cómo solucionar el problema.
+3. **Usar lenguaje amigable**: Evitar términos técnicos confusos.
+4. **Ser visualmente claros**: Destacar sin ser alarmistas.
+5. **Permitir recuperación**: Ofrecer acciones para resolver el error.
+
+Ejemplos de implementación:
+- Errores de autenticación con instrucciones claras
+- Problemas de conectividad con opciones para reintentar
+- Validación de formularios con retroalimentación inmediata
+
 ## 🤝 Filosofía del diseño
 
 - **Sin etiquetas negativas**: No hay tareas "fáciles" o "difíciles"
@@ -118,7 +178,7 @@ La aplicación está disponible en:
 - **rewards**: Premios configurados por tipos
 - **weeks**: Ciclos semanales con progreso
 
-## 📏 Reglas de Programación y Desarrollo
+## 📐 Reglas de Programación y Desarrollo
 
 ### 🧱 Estructura Modular del Código (Flutter)
 ```
@@ -163,6 +223,49 @@ Refactor obligatorio cuando:
 - **I**: Interfaces específicas para cada caso
 - **D**: Inyección de dependencias
 
+### 🔍 Sistema de Logging y Depuración
+
+El proyecto implementa un sistema de logs estructurado para facilitar la depuración y el diagnóstico de problemas:
+
+#### Principios de Logging
+1. **Logs en puntos clave**: Cada flujo importante (autenticación, operaciones de escritura/lectura, cambios de estado) debe incluir logs en puntos estratégicos.
+2. **Niveles de log diferenciados**: 
+   - `verbose`: Detalles extensos (solo desarrollo)
+   - `debug`: Información para debugging
+   - `info`: Eventos normales y significativos
+   - `warning`: Situaciones no críticas pero inesperadas
+   - `error`: Errores recuperables
+   - `wtf`: Errores críticos/irrecuperables
+
+#### Utilidad para Desarrolladores
+- **Panel de logs (modo desarrollo)**: Interfaz visual que muestra logs en tiempo real
+- **Filtrado por nivel**: Capacidad de mostrar solo los logs relevantes
+- **Trazabilidad de procesos**: Cada flujo importante tiene un ID rastreable en logs
+
+#### Buenas Prácticas
+- Incluir logs ANTES y DESPUÉS de operaciones críticas
+- Registrar intentos fallidos con contexto suficiente para diagnóstico
+- Capturar excepciones con mensaje amigable para usuario Y detalle técnico para logs
+- Mantener consistencia en el formato y estructura de los mensajes
+
+#### Ejemplos de Implementación
+
+```dart
+// Ejemplo de logging en proceso crítico
+try {
+  devLogger.log("Iniciando proceso X con parámetros: $params", level: LogLevel.info);
+  
+  // Operación crítica
+  final result = await someService.criticalOperation();
+  
+  devLogger.log("Proceso X completado exitosamente", level: LogLevel.info);
+  return result;
+} catch (e) {
+  devLogger.log("Error en proceso X: $e", level: LogLevel.error);
+  throw CustomException("Mensaje amigable para usuario", originalError: e);
+}
+```
+
 ## 🔒 Seguridad
 
 ### Archivos de configuración sensibles
@@ -182,15 +285,31 @@ Antes de ejecutar el proyecto:
 1. Copia los archivos de ejemplo y renómbralos:
    ```bash
    cp lib/firebase_options.example.dart lib/firebase_options.dart
+   cp env.example .env
    cp android/app/google-services.example.json android/app/google-services.json
    ```
 
-2. Crea un proyecto en la [consola de Firebase](https://console.firebase.google.com/)
+2. Configura el archivo `.env` con tus credenciales de Firebase:
+   ```
+   FIREBASE_API_KEY=your_api_key_here
+   FIREBASE_APP_ID=your_app_id_here
+   FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id_here
+   FIREBASE_PROJECT_ID=your_project_id_here
+   FIREBASE_AUTH_DOMAIN=your_auth_domain_here
+   FIREBASE_STORAGE_BUCKET=your_storage_bucket_here
+   FIREBASE_MEASUREMENT_ID=your_measurement_id_here
+   ```
+   
+   Estas variables se cargan automáticamente en la aplicación mediante el paquete `flutter_dotenv`.
 
-3. Reemplaza los valores de marcador por tus propias claves de API:
-   - En `lib/firebase_options.dart`: Actualiza las opciones de configuración de Firebase
-   - En `android/app/google-services.json`: Descarga este archivo de tu proyecto Firebase
-   - Para iOS, descarga el archivo `GoogleService-Info.plist` desde Firebase
+3. Crea un proyecto en la [consola de Firebase](https://console.firebase.google.com/) si aún no lo has hecho.
+
+4. Obtén las credenciales necesarias desde la consola de Firebase:
+   - En la sección "Configuración del proyecto" > "Tus aplicaciones" > "Web"
+   - Copia los valores de configuración a tu archivo `.env`
+   - Para Android e iOS, descarga los archivos de configuración correspondientes
+
+5. Asegúrate de que `.env` y `firebase_options.dart` estén incluidos en tu `.gitignore` para no exponer tus credenciales.
 
 **Nunca compartas ni subas tus claves API a repositorios públicos.**
 

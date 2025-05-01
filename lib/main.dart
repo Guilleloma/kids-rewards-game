@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'screens/onboarding/login_screen.dart';
 import 'screens/onboarding/register_screen.dart';
 import 'screens/parent/parent_dashboard.dart';
 import 'providers/auth_provider.dart';
+import 'utils/dev_logger.dart';
+import 'widgets/dev_log_overlay.dart';
 
 // App principal
 void main() async {
@@ -15,14 +18,34 @@ void main() async {
   // Inicialización de paquetes
   await EasyLocalization.ensureInitialized();
   
-  // Inicializar Firebase
+  // Cargar variables de entorno - ASEGURARSE DE QUE ESTO SE COMPLETE
+  try {
+    await dotenv.load(fileName: ".env");
+    
+    // Verificar que las variables se cargaron correctamente
+    final apiKey = dotenv.env['FIREBASE_API_KEY'];
+    devLogger.log("Variables de entorno cargadas correctamente", level: LogLevel.info);
+    
+    if (apiKey == null || apiKey.isEmpty) {
+      throw Exception("FIREBASE_API_KEY no está definida en el archivo .env");
+    }
+    
+    // Mostrar las claves para depuración (sólo primeros caracteres por seguridad)
+    devLogger.log("FIREBASE_API_KEY: ${apiKey.substring(0, 5)}...", level: LogLevel.debug);
+    devLogger.log("FIREBASE_PROJECT_ID: ${dotenv.env['FIREBASE_PROJECT_ID']}", level: LogLevel.debug);
+    devLogger.log("FIREBASE_AUTH_DOMAIN: ${dotenv.env['FIREBASE_AUTH_DOMAIN']}", level: LogLevel.debug);
+  } catch (e) {
+    devLogger.log("Error al cargar variables de entorno: $e", level: LogLevel.error);
+  }
+  
+  // Inicializar Firebase DESPUÉS de cargar variables
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform, 
     );
-    print('Firebase inicializado correctamente');
+    devLogger.log('Firebase inicializado correctamente', level: LogLevel.info);
   } catch (e) {
-    print('Error al inicializar Firebase: $e');
+    devLogger.log('Error al inicializar Firebase: $e', level: LogLevel.error);
   }
   
   runApp(
@@ -42,6 +65,9 @@ class KidsRewardsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Determinar si estamos en modo desarrollo
+    const bool isDevelopment = true; // Cambiar a false para producción
+    
     return MaterialApp(
       title: 'Kids Rewards Game',
       localizationsDelegates: context.localizationDelegates,
@@ -73,9 +99,16 @@ class KidsRewardsApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2E7D32), // Verde más oscuro para mejor contraste
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             foregroundColor: Colors.white,
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFF2E7D32), // Verde más oscuro para mejor contraste
+            textStyle: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
         cardTheme: CardTheme(
@@ -83,6 +116,13 @@ class KidsRewardsApp extends StatelessWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
+      builder: (context, child) {
+        // Este builder se ejecuta para cada pantalla de la aplicación
+        return DevLogOverlay(
+          enabled: isDevelopment,
+          child: child ?? const SizedBox(),
+        );
+      },
       home: const AuthWrapper(),
     );
   }

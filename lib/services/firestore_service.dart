@@ -67,18 +67,30 @@ class FirestoreService {
             .toList());
   }
 
+  // Solución temporal que no requiere índice compuesto
   Stream<WeekModel?> getCurrentWeek(String userId) {
     final now = DateTime.now();
+    
+    // Usando solo un filtro de fecha para evitar la necesidad del índice compuesto
     return _weeksRef(userId)
-        .where('startDate', isLessThanOrEqualTo: now)
-        .where('endDate', isGreaterThanOrEqualTo: now)
-        .limit(1)
         .snapshots()
-        .map((snapshot) => snapshot.docs.isEmpty
-            ? null
-            : WeekModel.fromJson(
-                snapshot.docs.first.data() as Map<String, dynamic>,
-                snapshot.docs.first.id));
+        .map((snapshot) {
+          if (snapshot.docs.isEmpty) return null;
+          
+          // Filtrar manualmente en memoria
+          for (var doc in snapshot.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            final startDate = (data['startDate'] as Timestamp).toDate();
+            final endDate = (data['endDate'] as Timestamp).toDate();
+            
+            // Comprobar si la fecha actual está dentro del período
+            if (startDate.isBefore(now) && endDate.isAfter(now)) {
+              return WeekModel.fromJson(data, doc.id);
+            }
+          }
+          
+          return null;
+        });
   }
 
   Future<WeekModel> createNewWeek(String userId) async {

@@ -14,7 +14,8 @@
     "passwordReset": "Reset password",
     "resetLink": "We'll send a link to reset your password",
     "sendResetLink": "Send link",
-    "backToLogin": "Back to login"
+    "backToLogin": "Back to login",
+    "signUpNow": "Sign up now"
   },
   "onboarding": {
     "welcomeTitle": "Welcome to Kids Rewards!",
@@ -36,11 +37,18 @@
     "childMode": "Child mode",
     "settings": "Settings",
     "resetWeek": "Reset week",
+    "weeklyStats": "Weekly statistics",
+    "welcome": "Welcome",
+    "yourPoints": "Your points",
+    "earnedRewards": "Earned rewards",
     "stats": {
       "completedTasks": "Completed missions",
       "coinsEarned": "Coins earned",
       "pendingRewards": "Pending rewards"
-    }
+    },
+    "noWeekYet": "No active week yet",
+    "createNewWeek": "Create new week",
+    "loading": "Loading..."
   },
   "tasks": {
     "myDailyChallenges": "My daily challenges",
@@ -55,7 +63,10 @@
     "taskCategory": "Category",
     "taskPoints": "Points",
     "taskImage": "Image (optional)",
-    "deleteConfirmation": "Are you sure you want to delete this mission?"
+    "deleteConfirmation": "Are you sure you want to delete this mission?",
+    "taskAdded": "Mission added successfully",
+    "taskUpdated": "Mission updated successfully",
+    "taskDeleted": "Mission deleted successfully"
   },
   "rewards": {
     "myRewards": "Regular rewards",
@@ -88,6 +99,16 @@
     "edit": "Edit",
     "confirm": "Confirm",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "error": "Error",
+    "loading": "Loading...",
+    "retry": "Retry"
+  },
+  "errors": {
+    "general": "An error occurred",
+    "network": "Network error",
+    "auth": "Authentication error",
+    "database": "Database error",
+    "loadData": "Error loading data"
   }
 }

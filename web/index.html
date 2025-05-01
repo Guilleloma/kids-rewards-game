@@ -32,12 +32,62 @@
   <title>kids_rewards_game</title>
   <link rel="manifest" href="manifest.json">
 
+  <!-- Fix CORS issues with Firebase Storage -->
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
+  <meta http-equiv="Cross-Origin-Embedder-Policy" content="credentialless" />
+
   <script>
     // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = null;
+    var serviceWorkerVersion = null;
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
+  
+  <!-- Image proxy bridge for CORS issues -->
+  <script>
+    window.loadImageViaJS = function(url, imageId) {
+      // Este enfoque usa JavaScript para cargar imágenes eludiendo las restricciones CORS
+      var img = new Image();
+      img.crossOrigin = "anonymous"; // Intentar cargar con permisos CORS
+      
+      // Agregar timestamp para evitar cacheo
+      var timestamp = new Date().getTime();
+      var urlWithCache = url.includes('?') ? url + '&_t=' + timestamp : url + '?_t=' + timestamp;
+      
+      img.onload = function() {
+        // Cuando la imagen está cargada, notificar al flutter
+        window.flutter_inappwebview.callHandler('imageLoaded', imageId, true);
+        console.log("Imagen cargada con éxito: " + imageId);
+      };
+      
+      img.onerror = function(e) {
+        // Cuando hay error, notificar al flutter
+        console.error("Error cargando imagen: " + imageId, e);
+        window.flutter_inappwebview.callHandler('imageLoaded', imageId, false);
+      };
+      
+      // Iniciar carga
+      img.src = urlWithCache;
+      
+      // Agregar la imagen al DOM temporalmente para que se muestre
+      var container = document.createElement('div');
+      container.id = 'img-container-' + imageId;
+      container.style.display = 'none';
+      container.appendChild(img);
+      document.body.appendChild(container);
+      
+      return true;
+    };
+    
+    // Función más simple que simplemente preprocesa la URL para Firebase Storage
+    window.fixFirebaseStorageUrl = function(url) {
+      if (url && url.includes('firebasestorage.googleapis.com')) {
+        var timestamp = new Date().getTime();
+        return url.includes('?') ? url + '&_t=' + timestamp : url + '?_t=' + timestamp;
+      }
+      return url;
+    };
+  </script>
 </head>
 <body>
   <script>
@@ -55,13 +105,23 @@
       });
     });
   </script>
-  
-  <!-- Firebase Core JS SDK -->
+
+  <!-- Firebase Core -->
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
   
   <!-- Add Firebase products that you want to use -->
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage.js"></script>
+
+  <!-- Fix CORS issues with Firebase Storage images -->
+  <script>
+    window.addEventListener('error', function(e) {
+      // Log image loading errors para diagnóstico
+      if (e && e.target && (e.target.nodeName === 'IMG' || e.target.nodeName === 'LINK')) {
+        console.error('Error cargando recurso:', e.target.src || e.target.href, e);
+      }
+    }, true);
+  </script>
 </body>
 </html>

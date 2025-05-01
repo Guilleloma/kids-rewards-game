@@ -29,6 +29,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -52,12 +53,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
       } else {
         // Mostrar error si no hay usuario
+        if (!mounted) return;
         setState(() {
           _errorMessage = 'auth.loginError'.tr();
           _isLoading = false;
         });
       }
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = error.toString();
         _isLoading = false;
