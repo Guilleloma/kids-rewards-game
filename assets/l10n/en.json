@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "Kids Rewards Game"
+  },
+  "auth": {
+    "login": "Log in",
+    "register": "Sign up",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full name",
+    "forgotPassword": "Forgot your password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "passwordReset": "Reset password",
+    "resetLink": "We'll send a link to reset your password",
+    "sendResetLink": "Send link",
+    "backToLogin": "Back to login"
+  },
+  "onboarding": {
+    "welcomeTitle": "Welcome to Kids Rewards!",
+    "welcomeSubtitle": "Let's set up the app for you and your little one.",
+    "step1Title": "About your child",
+    "step2Title": "Weekly missions",
+    "step3Title": "Prizes and rewards",
+    "step4Title": "All set!",
+    "parentName": "Your name",
+    "childName": "Child's name",
+    "childAge": "Child's age",
+    "next": "Next",
+    "back": "Back",
+    "start": "Start",
+    "allSet": "All set up! Now you can use the app to motivate and reward."
+  },
+  "dashboard": {
+    "weekProgress": "Weekly progress",
+    "childMode": "Child mode",
+    "settings": "Settings",
+    "resetWeek": "Reset week",
+    "stats": {
+      "completedTasks": "Completed missions",
+      "coinsEarned": "Coins earned",
+      "pendingRewards": "Pending rewards"
+    }
+  },
+  "tasks": {
+    "myDailyChallenges": "My daily challenges",
+    "specialHelp": "Special help",
+    "braveMissions": "Brave missions",
+    "noTasks": "No missions in this category",
+    "addTask": "Add mission",
+    "editTask": "Edit mission",
+    "deleteTask": "Delete mission",
+    "taskName": "Mission name",
+    "taskDescription": "Description (optional)",
+    "taskCategory": "Category",
+    "taskPoints": "Points",
+    "taskImage": "Image (optional)",
+    "deleteConfirmation": "Are you sure you want to delete this mission?"
+  },
+  "rewards": {
+    "myRewards": "Regular rewards",
+    "superRewards": "Super rewards",
+    "noRewards": "No rewards in this category",
+    "addReward": "Add reward",
+    "editReward": "Edit reward",
+    "deleteReward": "Delete reward",
+    "rewardName": "Reward name",
+    "rewardDescription": "Description (optional)",
+    "rewardType": "Reward type",
+    "rewardCost": "Cost (coins)",
+    "image": "Image (optional)",
+    "selectImage": "Select image",
+    "deleteConfirmation": "Are you sure you want to delete this reward?"
+  },
+  "settings": {
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "language": "Language",
+    "theme": "Theme",
+    "about": "About",
+    "help": "Help",
+    "logout": "Log out"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "active": "Active",
+    "inactive": "Inactive"
+  }
+}
