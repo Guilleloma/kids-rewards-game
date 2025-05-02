@@ -259,6 +259,20 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     // De esta forma, las tareas solo aparecerán como completadas el día que se completaron
     completedTaskIds = week.getTasksCompletedOnDay(_selectedDay);
     
+    // DEBUG: Imprimir información de las tareas completadas para depuración
+    print('===== DEBUG: TASKS COMPLETED =====');
+    print('Selected Day: ${_selectedDay.toString()}');
+    print('Is Today: $isViewingToday');
+    print('Completed Task IDs for this day: $completedTaskIds');
+    print('All Completed Task IDs in week: ${week.completedTasks}');
+    
+    // Imprimir fechas de compleción para cada tarea
+    print('Task Completion Dates:');
+    week.taskCompletionDates.forEach((taskId, date) {
+      print('Task $taskId completed on: $date');
+    });
+    print('==================================');
+    
     // Separar tareas por categoría
     final dailyTasks = activeTasks
         .where((task) => task.category == TaskCategory.daily)
