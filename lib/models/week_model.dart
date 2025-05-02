@@ -83,6 +83,32 @@ class WeekModel {
     return completedTasks.contains(taskId);
   }
   
+  // Verificar si una tarea está completada hoy
+  bool isTaskCompletedToday(String taskId, DateTime today, TaskCategory taskCategory) {
+    // Si la tarea no está en la lista de completadas, entonces no está completada
+    if (!completedTasks.contains(taskId)) {
+      return false;
+    }
+    
+    // Si no hay fecha de compleción registrada, consideramos que no está completada
+    if (!taskCompletionDates.containsKey(taskId)) {
+      return false;
+    }
+    
+    // Obtener la fecha de compleción
+    final completionDate = taskCompletionDates[taskId]!;
+    
+    // Para tareas diarias, solo consideramos completada si se completó hoy
+    if (taskCategory == TaskCategory.daily) {
+      return completionDate.year == today.year && 
+             completionDate.month == today.month && 
+             completionDate.day == today.day;
+    }
+    
+    // Para otros tipos de tareas (help, brave), se consideran completadas para toda la semana
+    return true;
+  }
+  
   // Añadir una tarea completada y calcular puntos
   WeekModel addCompletedTask(String taskId, int pointsForTask) {
     if (completedTasks.contains(taskId)) {

@@ -249,19 +249,15 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     // Obtener lista de tareas completadas (ahora filtradas por día)
     List<String> completedTaskIds = [];
     
-    // Si estamos viendo el día actual, usamos la UI interactiva normal
+    // Si estamos viendo el día actual
     final today = DateTime.now();
     final isViewingToday = _selectedDay.day == today.day && 
                          _selectedDay.month == today.month && 
                          _selectedDay.year == today.year;
     
-    if (isViewingToday) {
-      // Para hoy, usar todas las tareas completadas
-      completedTaskIds = week.completedTasks;
-    } else {
-      // Para otros días, mostrar solo las tareas completadas ese día específico
-      completedTaskIds = week.getTasksCompletedOnDay(_selectedDay);
-    }
+    // Obtener SOLO las tareas completadas en el día seleccionado
+    // De esta forma, las tareas solo aparecerán como completadas el día que se completaron
+    completedTaskIds = week.getTasksCompletedOnDay(_selectedDay);
     
     // Separar tareas por categoría
     final dailyTasks = activeTasks
