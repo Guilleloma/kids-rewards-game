@@ -1,3 +1,5 @@
+import 'package:kids_rewards_game/models/task_model.dart';
+
 class WeekModel {
   final String id;
   final DateTime startDate;
@@ -140,6 +142,19 @@ class WeekModel {
         })
         .map((entry) => entry.key)
         .toList();
+  }
+  
+  // Método para obtener los puntos ganados en un día específico
+  int getPointsEarnedOnDay(DateTime day, Map<String, TaskModel> allTasks) {
+    final tasksCompletedOnDay = getTasksCompletedOnDay(day);
+    return tasksCompletedOnDay.fold(0, (sum, taskId) {
+      // Si tenemos acceso a la tarea completa, usamos sus puntos
+      if (allTasks.containsKey(taskId)) {
+        return sum + allTasks[taskId]!.points;
+      }
+      // Si no tenemos acceso a la tarea, devolvemos solo el recuento
+      return sum;
+    });
   }
   
   // Método para crear una copia con una nueva tarea completada

@@ -92,7 +92,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                         _buildProgressBanner(childName, week, ref.watch(activeRewardsProvider(userId))),
                         
                         // Selector de días de la semana
-                        _buildDaySelector(week),
+                        _buildDaySelector(week, activeTasks!),
                         
                         // Contenido principal
                         Expanded(
@@ -138,7 +138,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
   }
   
   // Selector de días
-  Widget _buildDaySelector(WeekModel week) {
+  Widget _buildDaySelector(WeekModel week, List<TaskModel> activeTasks) {
     // Calcular los 7 días de la semana actual
     final today = DateTime.now();
     final weekStart = DateTime(week.startDate.year, week.startDate.month, week.startDate.day);
@@ -149,6 +149,12 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
     
     // Formatear los nombres de los días
     final dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    
+    // Creamos un mapa de tareas por ID para acceso rápido
+    final Map<String, TaskModel> taskMap = {};
+    for (final task in activeTasks) {
+      taskMap[task.id] = task;
+    }
     
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
@@ -163,13 +169,13 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                            day.year == today.year;
             final dayName = dayNames[day.weekday - 1]; // -1 porque weekday va de 1-7
             
-            // Contar tareas completadas este día
-            final tasksCompletedOnDay = week.getTasksCompletedOnDay(day).length;
+            // Calcular puntos ganados este día
+            final pointsEarnedOnDay = week.getPointsEarnedOnDay(day, taskMap);
             
             // Verificar si este día es el seleccionado
             final isSelected = _selectedDay.day == day.day && 
-                             _selectedDay.month == day.month && 
-                             _selectedDay.year == day.year;
+                              _selectedDay.month == day.month && 
+                              _selectedDay.year == day.year;
             
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -191,7 +197,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                         fontWeight: isToday ? FontWeight.bold : null,
                       ),
                     ),
-                    if (tasksCompletedOnDay > 0)
+                    if (pointsEarnedOnDay > 0)
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
@@ -201,7 +207,7 @@ class _ChildHomeState extends ConsumerState<ChildHome> {
                           shape: BoxShape.circle,
                         ),
                         child: Text(
-                          '$tasksCompletedOnDay',
+                          '$pointsEarnedOnDay',
                           style: TextStyle(
                             color: isSelected 
                                 ? Theme.of(context).primaryColor 
